@@ -34,15 +34,15 @@ fn default_menu_items() -> Vec<MenuItem> {
         MenuItem {
             name: "View Dotfiles".to_string(),
             command: "yazi".to_string(),
-            args: vec![],
+            args: vec!["~/.config".to_string()],
         },
         MenuItem {
-            name: "Configure".to_string(),
+            name: "Launch Browser".to_string(),
             command: "".to_string(),
             args: vec![],
         },
         MenuItem {
-            name: "About".to_string(),
+            name: "View Shell".to_string(),
             command: "".to_string(),
             args: vec![],
         },
