@@ -8,7 +8,9 @@ A customizable TUI (Terminal User Interface) homepage for your terminal, written
 - 📋 **Configurable Menu** - Add your own menu items with custom commands
 - 🎯 **Centered Layout** - Logo positioned 20% from top, perfectly centered
 - ⌨️ **Keyboard Navigation** - Vim-style (j/k) or arrow keys
-- 📁 **Dotfile Management** - Built-in integration with yazi file manager
+- 📁 **Dotfile Management** - Built-in integration with yazi file manager to view `~/.config`
+- 🌐 **Browser Launcher** - Automatically detects and launches your default browser
+- 🐚 **Shell Config Editor** - Detects your shell and opens the config file in nvim
 - 🔧 **Configuration File** - TOML-based configuration at `~/.config/dott/config.toml`
 
 ## Installation
@@ -39,6 +41,24 @@ dott
 
 The configuration file is automatically created at `~/.config/dott/config.toml` on first run.
 
+### Default Menu Items
+
+#### View Dotfiles
+Opens the `~/.config` directory in yazi file manager for easy dotfile browsing.
+
+#### Launch Browser
+Automatically detects and launches your default browser. Detection order:
+1. Checks `$BROWSER` environment variable
+2. Searches for common browsers: firefox, google-chrome, chromium, brave, microsoft-edge, opera, vivaldi, safari
+
+#### View Shell
+Detects your shell from `$SHELL` environment variable and opens the appropriate config file in nvim:
+- zsh → `~/.zshrc`
+- bash → `~/.bashrc`
+- fish → `~/.config/fish/config.fish`
+- ksh → `~/.kshrc`
+- tcsh → `~/.tcshrc`
+
 ### Default Configuration
 
 ```toml
@@ -47,15 +67,15 @@ logo_type = "default"
 [[menu_items]]
 name = "View Dotfiles"
 command = "yazi"
-args = []
+args = ["~/.config"]
 
 [[menu_items]]
-name = "Configure"
+name = "Launch Browser"
 command = ""
 args = []
 
 [[menu_items]]
-name = "About"
+name = "View Shell"
 command = ""
 args = []
 
