@@ -18,11 +18,12 @@ use ratatui::{
 use std::io;
 
 const DOTT_LOGO: &str = r#"
-     _       _   _   
-  __| | ___ | |_| |_ 
- / _` |/ _ \| __| __|
-| (_| | (_) | |_| |_ 
- \__,_|\___/ \__|\__|
+      _           _   _   
+   __| | ___  ___| |_| |_ 
+  / _` |/ _ \/ __| __| __|
+ | (_| | (_) \__ \ |_| |_ 
+  \__,_|\___/|___/\__|\__|
+                          
 "#;
 
 /// Detect the user's default browser
@@ -254,11 +255,11 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
 fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
 
-    // Calculate 20% from top
+    // Calculate 10% from top for logo positioning
     let vertical_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(20),
+            Constraint::Percentage(10),
             Constraint::Min(0),
             Constraint::Percentage(20),
         ])
@@ -316,28 +317,73 @@ fn ui(f: &mut Frame, app: &App) {
         .iter()
         .enumerate()
         .map(|(i, item)| {
-            let style = if i == app.selected {
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD)
+            let (prefix, style) = if i == app.selected {
+                (
+                    "> ",
+                    Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD)
+                )
             } else {
-                Style::default().fg(Color::White)
+                (
+                    "> ",
+                    Style::default().fg(Color::White)
+                )
             };
-            ListItem::new(Line::from(Span::styled(format!("  {}  ", item.name), style)))
+            ListItem::new(Line::from(Span::styled(format!("{}{}  ", prefix, item.name), style)))
         })
         .collect();
 
     let list = List::new(items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .title("Menu")
-                .style(Style::default().fg(Color::Cyan)),
-        )
+        .block(Block::default())
         .style(Style::default().fg(Color::White));
 
     f.render_widget(list, menu_horizontal[1]);
+
+    // Display the command for the selected item
+    let selected_item = &app.config.menu_items[app.selected];
+    let command_text = if !selected_item.command.is_empty() {
+        if selected_item.args.is_empty() {
+            format!("Command: {}", selected_item.command)
+        } else {
+            format!("Command: {} {}", selected_item.command, selected_item.args.join(" "))
+        }
+    } else {
+        // Special cases for built-in commands
+        match selected_item.name.as_str() {
+            "Launch Browser" => "Command: <browser detection>".to_string(),
+            "View Shell" => "Command: nvim <shell config>".to_string(),
+            "Quit" => "Command: exit".to_string(),
+            _ => String::new(),
+        }
+    };
+
+    if !command_text.is_empty() {
+        let command_display = Paragraph::new(command_text)
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::DarkGray));
+        
+        // Position command display below the menu
+        let command_area = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3),
+                Constraint::Min(0),
+            ])
+            .split(vertical_chunks[1]);
+        
+        let command_horizontal = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Length((size.width.saturating_sub(menu_width + 20)) / 2),
+                Constraint::Length(menu_width + 20),
+                Constraint::Length((size.width.saturating_sub(menu_width + 20)) / 2),
+            ])
+            .split(command_area[1]);
+        
+        f.render_widget(command_display, command_horizontal[1]);
+    }
 
     // Help text at bottom
     let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | q/Esc: Quit")

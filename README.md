@@ -15,6 +15,10 @@ A customizable TUI (Terminal User Interface) homepage for your terminal, written
 
 ## Installation
 
+```bash
+cargo install --git https://github.com/commended/dott
+```
+
 ### From Source
 
 ```bash
