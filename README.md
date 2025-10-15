@@ -53,7 +53,8 @@ Opens the `~/.config` directory in yazi file manager for easy dotfile browsing.
 #### Launch Browser
 Automatically detects and launches your default browser. Detection order:
 1. Checks `$BROWSER` environment variable
-2. Searches for common browsers: firefox, google-chrome, chromium, brave, microsoft-edge, opera, vivaldi, safari
+2. Uses `xdg-settings` to get the system default browser
+3. Fallback: Searches for common browsers: firefox, google-chrome, chromium, brave, microsoft-edge, opera, vivaldi, safari, zen-browser
 
 #### View Shell
 Detects your shell from `$SHELL` environment variable and opens the appropriate config file in nvim:
