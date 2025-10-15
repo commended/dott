@@ -211,6 +211,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                     EnterAlternateScreen,
                                     EnableMouseCapture
                                 )?;
+                                terminal.clear()?;
                             }
                         }
                         _ => {
@@ -243,6 +244,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                     EnterAlternateScreen,
                                     EnableMouseCapture
                                 )?;
+                                terminal.clear()?;
                             }
                         }
                     }
