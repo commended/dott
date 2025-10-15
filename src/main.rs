@@ -18,12 +18,12 @@ use ratatui::{
 use std::io;
 
 const DOTT_LOGO: &str = r#"
-      _           _   _   
-   __| | ___  ___| |_| |_ 
-  / _` |/ _ \/ __| __| __|
- | (_| | (_) \__ \ |_| |_ 
-  \__,_|\___/|___/\__|\__|
-                          
+      _       _   _   
+   __| | ___ | |_| |_ 
+  / _` |/ _ \| __| __|
+ | (_| | (_) | |_| |_ 
+  \__,_|\___/ \__|\__|
+                      
 "#;
 
 /// Detect the user's default browser
@@ -88,14 +88,20 @@ fn detect_shell_config() -> Option<String> {
 struct App {
     selected: usize,
     config: Config,
+    detected_browser: Option<String>,
+    detected_shell_config: Option<String>,
 }
 
 impl App {
     fn new() -> App {
         let config = Config::load();
+        let detected_browser = detect_browser();
+        let detected_shell_config = detect_shell_config();
         App {
             selected: 0,
             config,
+            detected_browser,
+            detected_shell_config,
         }
     }
 
@@ -162,9 +168,9 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     match selected.name.as_str() {
                         "Quit" => return Ok(()),
                         "Launch Browser" => {
-                            // Detect and launch the browser
+                            // Detect and launch the browser, then exit dott
                             if let Some(browser) = detect_browser() {
-                                // Exit TUI temporarily
+                                // Exit TUI
                                 disable_raw_mode()?;
                                 execute!(
                                     terminal.backend_mut(),
@@ -177,13 +183,8 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                 let _ = std::process::Command::new(&browser)
                                     .spawn();
 
-                                // Restore TUI
-                                enable_raw_mode()?;
-                                execute!(
-                                    terminal.backend_mut(),
-                                    EnterAlternateScreen,
-                                    EnableMouseCapture
-                                )?;
+                                // Exit dott completely
+                                return Ok(());
                             }
                         }
                         "View Shell" => {
@@ -352,8 +353,20 @@ fn ui(f: &mut Frame, app: &App) {
     } else {
         // Special cases for built-in commands
         match selected_item.name.as_str() {
-            "Launch Browser" => "Command: <browser detection>".to_string(),
-            "View Shell" => "Command: nvim <shell config>".to_string(),
+            "Launch Browser" => {
+                if let Some(ref browser) = app.detected_browser {
+                    format!("Command: {}", browser)
+                } else {
+                    "Command: <no browser detected>".to_string()
+                }
+            },
+            "View Shell" => {
+                if let Some(ref shell_config) = app.detected_shell_config {
+                    format!("Command: nvim {}", shell_config)
+                } else {
+                    "Command: nvim <shell config>".to_string()
+                }
+            },
             "Quit" => "Command: exit".to_string(),
             _ => String::new(),
         }
