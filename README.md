@@ -1,16 +1,7 @@
 # dott
 
-A customizable TUI (Terminal User Interface) homepage for your terminal, written in Rust.
+a beautiful and fast tui written in rust
 
-## Features
-
-- 🎨 **Customizable ASCII Logo** - Use the default "dott" logo or provide your own ASCII art
-- 📋 **Configurable Menu** - Add your own menu items with custom commands
-- 🎯 **Centered Layout** - Logo positioned 20% from top, perfectly centered
-- ⌨️ **Keyboard Navigation** - Vim-style (j/k) or arrow keys
-- 📁 **Dotfile Management** - Built-in integration with yazi file manager to view `~/.config`
-- 🐚 **Shell Config Editor** - Detects your shell and opens the config file in nvim
-- 🔧 **Configuration File** - TOML-based configuration at `~/.config/dott/config.toml`
 
 ## Installation
 
@@ -25,6 +16,12 @@ cargo build --release
 sudo cp target/release/dott /usr/local/bin/
 ```
 
+## Updating
+
+```bash
+cargo install --git https://github.com/commended/dott --force
+```
+
 ## Usage
 
 Simply run:
@@ -33,32 +30,9 @@ Simply run:
 dott
 ```
 
-### Keyboard Controls
-
-- **↑/k**: Move up
-- **↓/j**: Move down  
-- **Enter**: Select menu item
-- **q/Esc**: Quit
-
 ## Configuration
 
 The configuration file is automatically created at `~/.config/dott/config.toml` on first run.
-
-### Default Menu Items
-
-#### View Dotfiles
-Opens the `~/.config` directory in yazi file manager for easy dotfile browsing.
-
-#### Edit Dott Config
-Opens the dott configuration file at `~/.config/dott/config.toml` in nvim for easy editing.
-
-#### View Shell
-Detects your shell from `$SHELL` environment variable and opens the appropriate config file in nvim:
-- zsh → `~/.zshrc`
-- bash → `~/.bashrc`
-- fish → `~/.config/fish/config.fish`
-- ksh → `~/.kshrc`
-- tcsh → `~/.tcshrc`
 
 ### Default Configuration
 
@@ -112,22 +86,11 @@ command = "htop"
 args = []
 ```
 
-## ASCII Image Support
-
-Based on concepts from [ascii-view](https://github.com/gouwsxander/ascii-view), dott includes support for displaying images as ASCII art. This functionality is designed to be extended for custom logo creation.
 
 ## Requirements
 
 - Rust 1.70+ (for building)
 - A terminal with ANSI color support
-- Optional: `yazi` for the "View Dotfiles" feature
-
-## Inspiration
-
-- [ascii-view](https://github.com/gouwsxander/ascii-view) - ASCII image conversion concepts
-- Similar to activation menus like `dotter` for managing dotfiles
-
-## License
-
-MIT
+- yazi
+- neovim
 
