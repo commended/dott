@@ -96,7 +96,7 @@ fn parse_desktop_file(desktop_file: &str) -> Option<String> {
                     // Extract the executable name (first word, without args)
                     if let Some(executable) = exec_line.split_whitespace().next() {
                         // Handle field codes like %u, %U, etc.
-                        let executable = executable.trim_end_matches(|c| c == '%');
+                        let executable = executable.trim_end_matches('%');
                         return Some(executable.to_string());
                     }
                 }
