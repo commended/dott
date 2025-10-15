@@ -1,0 +1,49 @@
+# Dott Configuration Example
+# This file demonstrates the various configuration options available
+
+# Logo type: "default" or "custom"
+logo_type = "custom"
+
+# Path to custom logo file (only used when logo_type = "custom")
+custom_logo_path = "/home/runner/.config/dott/custom-logo.txt"
+
+# Menu items - each item can have a name, command, and arguments
+[[menu_items]]
+name = "View Dotfiles"
+command = "yazi"
+args = []
+
+[[menu_items]]
+name = "Edit Neovim Config"
+command = "nvim"
+args = ["~/.config/nvim/init.lua"]
+
+[[menu_items]]
+name = "Edit Shell Config"
+command = "nvim"
+args = ["~/.bashrc"]
+
+[[menu_items]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[[menu_items]]
+name = "Git Status"
+command = "lazygit"
+args = []
+
+[[menu_items]]
+name = "Configure Dott"
+command = "nvim"
+args = ["~/.config/dott/config.toml"]
+
+[[menu_items]]
+name = "About"
+command = ""
+args = []
+
+[[menu_items]]
+name = "Quit"
+command = ""
+args = []
