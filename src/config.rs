@@ -37,7 +37,7 @@ fn default_menu_items() -> Vec<MenuItem> {
             args: vec!["~/.config".to_string()],
         },
         MenuItem {
-            name: "Launch Browser".to_string(),
+            name: "Edit Dott Config".to_string(),
             command: "".to_string(),
             args: vec![],
         },
