@@ -9,8 +9,6 @@ A customizable TUI (Terminal User Interface) homepage for your terminal, written
 - 🎯 **Centered Layout** - Logo positioned 20% from top, perfectly centered
 - ⌨️ **Keyboard Navigation** - Vim-style (j/k) or arrow keys
 - 📁 **Dotfile Management** - Built-in integration with yazi file manager to view `~/.config`
-- 🌐 **Browser Launcher** - Automatically detects and launches your default browser
-- 🐚 **Shell Config Editor** - Detects your shell and opens the config file in nvim
 - 🔧 **Configuration File** - TOML-based configuration at `~/.config/dott/config.toml`
 
 ## Installation
@@ -50,19 +48,8 @@ The configuration file is automatically created at `~/.config/dott/config.toml` 
 #### View Dotfiles
 Opens the `~/.config` directory in yazi file manager for easy dotfile browsing.
 
-#### Launch Browser
-Automatically detects and launches your default browser. Detection order:
-1. Checks `$BROWSER` environment variable
-2. Uses `xdg-settings` to get the system default browser
-3. Fallback: Searches for common browsers: firefox, google-chrome, chromium, brave, microsoft-edge, opera, vivaldi, safari, zen-browser
-
-#### View Shell
-Detects your shell from `$SHELL` environment variable and opens the appropriate config file in nvim:
-- zsh → `~/.zshrc`
-- bash → `~/.bashrc`
-- fish → `~/.config/fish/config.fish`
-- ksh → `~/.kshrc`
-- tcsh → `~/.tcshrc`
+#### Edit Dott Config
+Opens the dott configuration file (`~/.config/dott/config.toml`) in nvim for easy editing.
 
 ### Default Configuration
 
@@ -75,14 +62,9 @@ command = "yazi"
 args = ["~/.config"]
 
 [[menu_items]]
-name = "Launch Browser"
-command = ""
-args = []
-
-[[menu_items]]
-name = "View Shell"
-command = ""
-args = []
+name = "Edit Dott Config"
+command = "nvim"
+args = ["~/.config/dott/config.toml"]
 
 [[menu_items]]
 name = "Quit"
@@ -106,13 +88,18 @@ Add new menu items with commands:
 
 ```toml
 [[menu_items]]
-name = "Edit Config"
+name = "Edit Neovim Config"
 command = "nvim"
-args = ["/home/username/.config/dott/config.toml"]
+args = ["~/.config/nvim/init.lua"]
 
 [[menu_items]]
 name = "System Monitor"
 command = "htop"
+args = []
+
+[[menu_items]]
+name = "Launch Browser"
+command = "firefox"
 args = []
 ```
 

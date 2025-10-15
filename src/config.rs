@@ -37,14 +37,9 @@ fn default_menu_items() -> Vec<MenuItem> {
             args: vec!["~/.config".to_string()],
         },
         MenuItem {
-            name: "Launch Browser".to_string(),
-            command: "".to_string(),
-            args: vec![],
-        },
-        MenuItem {
-            name: "View Shell".to_string(),
-            command: "".to_string(),
-            args: vec![],
+            name: "Edit Dott Config".to_string(),
+            command: "nvim".to_string(),
+            args: vec!["~/.config/dott/config.toml".to_string()],
         },
         MenuItem {
             name: "Quit".to_string(),
