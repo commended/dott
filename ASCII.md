@@ -21,11 +21,11 @@ custom_logo_path = "/path/to/your/ascii-art.txt"
 The default "dott" logo is embedded in the application:
 
 ```
-     _       _   _   
-  __| | ___ | |_| |_ 
- / _` |/ _ \| __| __|
-| (_| | (_) | |_| |_ 
- \__,_|\___/ \__|\__|
+      _       _   _   
+   __| | ___ | |_| |_ 
+  / _` |/ _ \| __| __|
+ | (_| | (_) | |_| |_ 
+  \__,_|\___/ \__|\__|
 ```
 
 ## ASCII Art Resources

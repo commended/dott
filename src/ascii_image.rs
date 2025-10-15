@@ -35,11 +35,11 @@ pub fn text_to_ascii_art(text: &str) -> Vec<String> {
     // For more complex ASCII art, we could use figlet-style fonts
     match text.to_lowercase().as_str() {
         "dott" => vec![
-            "     _       _   _   ".to_string(),
-            "  __| | ___ | |_| |_ ".to_string(),
-            " / _` |/ _ \\| __| __|".to_string(),
-            "| (_| | (_) | |_| |_ ".to_string(),
-            " \\__,_|\\___/ \\__|\\__|".to_string(),
+            "      _       _   _   ".to_string(),
+            "   __| | ___ | |_| |_ ".to_string(),
+            "  / _` |/ _ \\| __| __|".to_string(),
+            " | (_| | (_) | |_| |_ ".to_string(),
+            "  \\__,_|\\___/ \\__|\\__|".to_string(),
         ],
         _ => vec![text.to_string()],
     }
