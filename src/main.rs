@@ -1,3 +1,7 @@
+mod ascii_image;
+mod config;
+
+use config::Config;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -23,36 +27,32 @@ const DOTT_LOGO: &str = r#"
 
 struct App {
     selected: usize,
-    menu_items: Vec<String>,
+    config: Config,
 }
 
 impl App {
     fn new() -> App {
+        let config = Config::load();
         App {
             selected: 0,
-            menu_items: vec![
-                "View Dotfiles".to_string(),
-                "Configure".to_string(),
-                "About".to_string(),
-                "Quit".to_string(),
-            ],
+            config,
         }
     }
 
     fn next(&mut self) {
-        self.selected = (self.selected + 1) % self.menu_items.len();
+        self.selected = (self.selected + 1) % self.config.menu_items.len();
     }
 
     fn previous(&mut self) {
         if self.selected > 0 {
             self.selected -= 1;
         } else {
-            self.selected = self.menu_items.len() - 1;
+            self.selected = self.config.menu_items.len() - 1;
         }
     }
 
-    fn select(&self) -> String {
-        self.menu_items[self.selected].clone()
+    fn get_selected_item(&self) -> &config::MenuItem {
+        &self.config.menu_items[self.selected]
     }
 }
 
@@ -97,33 +97,42 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                 KeyCode::Down | KeyCode::Char('j') => app.next(),
                 KeyCode::Up | KeyCode::Char('k') => app.previous(),
                 KeyCode::Enter => {
-                    let selected = app.select();
-                    match selected.as_str() {
+                    let selected = app.get_selected_item();
+                    
+                    match selected.name.as_str() {
                         "Quit" => return Ok(()),
-                        "View Dotfiles" => {
-                            // Exit TUI and launch yazi
-                            disable_raw_mode()?;
-                            execute!(
-                                terminal.backend_mut(),
-                                LeaveAlternateScreen,
-                                DisableMouseCapture
-                            )?;
-                            terminal.show_cursor()?;
+                        _ => {
+                            if !selected.command.is_empty() {
+                                // Exit TUI temporarily
+                                disable_raw_mode()?;
+                                execute!(
+                                    terminal.backend_mut(),
+                                    LeaveAlternateScreen,
+                                    DisableMouseCapture
+                                )?;
+                                terminal.show_cursor()?;
 
-                            // Launch yazi
-                            let _ = std::process::Command::new("yazi")
-                                .arg(std::env::var("HOME").unwrap_or_else(|_| ".".to_string()))
-                                .status();
+                                // Execute command
+                                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                                let args: Vec<&str> = if selected.args.is_empty() {
+                                    vec![&home]
+                                } else {
+                                    selected.args.iter().map(|s| s.as_str()).collect()
+                                };
+                                
+                                let _ = std::process::Command::new(&selected.command)
+                                    .args(&args)
+                                    .status();
 
-                            // Restore TUI
-                            enable_raw_mode()?;
-                            execute!(
-                                terminal.backend_mut(),
-                                EnterAlternateScreen,
-                                EnableMouseCapture
-                            )?;
+                                // Restore TUI
+                                enable_raw_mode()?;
+                                execute!(
+                                    terminal.backend_mut(),
+                                    EnterAlternateScreen,
+                                    EnableMouseCapture
+                                )?;
+                            }
                         }
-                        _ => {}
                     }
                 }
                 _ => {}
@@ -145,8 +154,21 @@ fn ui(f: &mut Frame, app: &App) {
         ])
         .split(size);
 
+    // Get logo based on configuration
+    let logo_text = match app.config.logo_type {
+        config::LogoType::Default => DOTT_LOGO.to_string(),
+        config::LogoType::Custom => {
+            if let Some(ref path) = app.config.custom_logo_path {
+                // Try to load custom ASCII art from file
+                std::fs::read_to_string(path).unwrap_or_else(|_| DOTT_LOGO.to_string())
+            } else {
+                DOTT_LOGO.to_string()
+            }
+        }
+    };
+
     // Center the logo
-    let logo_lines: Vec<Line> = DOTT_LOGO
+    let logo_lines: Vec<Line> = logo_text
         .lines()
         .map(|line| Line::from(Span::styled(line, Style::default().fg(Color::Cyan))))
         .collect();
@@ -179,6 +201,7 @@ fn ui(f: &mut Frame, app: &App) {
         .split(menu_area[1]);
 
     let items: Vec<ListItem> = app
+        .config
         .menu_items
         .iter()
         .enumerate()
@@ -191,7 +214,7 @@ fn ui(f: &mut Frame, app: &App) {
             } else {
                 Style::default().fg(Color::White)
             };
-            ListItem::new(Line::from(Span::styled(format!("  {}  ", item), style)))
+            ListItem::new(Line::from(Span::styled(format!("  {}  ", item.name), style)))
         })
         .collect();
 
