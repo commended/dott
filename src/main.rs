@@ -33,7 +33,24 @@ fn detect_browser() -> Option<String> {
         return Some(browser);
     }
     
-    // Try common browsers in order of preference
+    // Try xdg-settings to get the actual default browser
+    if let Ok(output) = std::process::Command::new("xdg-settings")
+        .arg("get")
+        .arg("default-web-browser")
+        .output()
+    {
+        if output.status.success() {
+            if let Ok(desktop_file) = String::from_utf8(output.stdout) {
+                let desktop_file = desktop_file.trim();
+                // Parse the .desktop file to extract the executable
+                if let Some(browser) = parse_desktop_file(desktop_file) {
+                    return Some(browser);
+                }
+            }
+        }
+    }
+    
+    // Fallback: Try common browsers in order of preference
     let browsers = vec![
         "firefox",
         "google-chrome",
@@ -43,6 +60,7 @@ fn detect_browser() -> Option<String> {
         "opera",
         "vivaldi",
         "safari",
+        "zen-browser",
     ];
     
     for browser in browsers {
@@ -59,30 +77,58 @@ fn detect_browser() -> Option<String> {
     None
 }
 
-/// Detect the user's shell and return the config file path
-fn detect_shell_config() -> Option<String> {
-    let home = std::env::var("HOME").ok()?;
+/// Parse a .desktop file to extract the browser executable
+fn parse_desktop_file(desktop_file: &str) -> Option<String> {
+    // Try common locations for .desktop files
+    let desktop_paths = vec![
+        format!("/usr/share/applications/{}", desktop_file),
+        format!("/usr/local/share/applications/{}", desktop_file),
+        format!("{}/.local/share/applications/{}", 
+            std::env::var("HOME").unwrap_or_else(|_| ".".to_string()), desktop_file),
+    ];
     
+    for path in desktop_paths {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            // Look for the Exec= line
+            for line in content.lines() {
+                if line.starts_with("Exec=") {
+                    let exec_line = line.trim_start_matches("Exec=");
+                    // Extract the executable name (first word, without args)
+                    if let Some(executable) = exec_line.split_whitespace().next() {
+                        // Handle field codes like %u, %U, etc.
+                        let executable = executable.trim_end_matches(|c| c == '%');
+                        return Some(executable.to_string());
+                    }
+                }
+            }
+        }
+    }
+    
+    None
+}
+
+/// Detect the user's shell and return the config file path (with ~ for display)
+fn detect_shell_config() -> Option<String> {
     // Check the SHELL environment variable
     let shell = std::env::var("SHELL").ok()?;
     
-    // Determine config file based on shell
+    // Determine config file based on shell (using ~ notation)
     let config_file = if shell.contains("zsh") {
-        ".zshrc"
+        "~/.zshrc"
     } else if shell.contains("bash") {
-        ".bashrc"
+        "~/.bashrc"
     } else if shell.contains("fish") {
-        ".config/fish/config.fish"
+        "~/.config/fish/config.fish"
     } else if shell.contains("ksh") {
-        ".kshrc"
+        "~/.kshrc"
     } else if shell.contains("tcsh") {
-        ".tcshrc"
+        "~/.tcshrc"
     } else {
         // Default to bashrc if we can't determine
-        ".bashrc"
+        "~/.bashrc"
     };
     
-    Some(format!("{}/{}", home, config_file))
+    Some(config_file.to_string())
 }
 
 struct App {
@@ -199,9 +245,13 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                 )?;
                                 terminal.show_cursor()?;
 
+                                // Expand ~ to home directory
+                                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                                let expanded_path = shell_config.replace("~", &home);
+
                                 // Open shell config in nvim
                                 let _ = std::process::Command::new("nvim")
-                                    .arg(&shell_config)
+                                    .arg(&expanded_path)
                                     .status();
 
                                 // Restore TUI
