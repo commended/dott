@@ -5,7 +5,6 @@ edition = "2025"
 description = "clean tui with extreme customization"
 liscence = "MIT"
 repository = "https://github.com/commended/dott"
-keywords = "tui,home"
 catagories = "command-line-utilities"
 
 [dependencies]
