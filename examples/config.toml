@@ -1,16 +1,24 @@
-# Logo configuration
-logo_type = "default"
-
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"
-2 = "entries"
-3 = "colors"
-4 = "clock"
-5 = "help"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+logo_type = "default"
 
 # Entries - terminal commands with name, command, and arguments
 [[entries]]
@@ -47,3 +55,17 @@ args = ["~/.config/dott/config.toml"]
 name = "Quit"
 command = ""
 args = []
+
+# Custom modules configuration
+[custom]
+
+# Terminal colors module - displays color palette
+[custom.terminal_colors]
+shape = "circles"
+
+# Clock module - displays current time
+[custom.clock]
+
+# Break module - adds empty lines (default: 2)
+[custom.break]
+lines = 2

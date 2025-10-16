@@ -1,21 +1,33 @@
 # Dott Configuration Example - Multiple Entry Clusters
 # This example demonstrates using multiple entry groups with different modules
 
-# Logo configuration
-logo_type = "default"
-
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"
-2 = "clock"
-3 = "entries"
-4 = "break"
-5 = "entries2"
-6 = "colors"
-7 = "help"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries2"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+logo_type = "default"
 
 # First group of entries
 [[entries]]
@@ -49,7 +61,7 @@ name = "Quit"
 command = ""
 args = []
 
-# Optional: Custom modules (hardcoded components)
+# Custom modules configuration
 [custom]
 
 # Terminal colors module - displays color palette
@@ -58,3 +70,7 @@ shape = "circles"
 
 # Clock module - displays current time
 [custom.clock]
+
+# Break module - adds empty lines (default: 2)
+[custom.break]
+lines = 2

@@ -424,18 +424,14 @@ fn ui(f: &mut Frame, app: &App) {
             }
             config::ModuleType::Colors => {
                 if let Some(ref custom) = app.config.custom {
-                    if let Some(ref colors_config) = custom.terminal_colors {
-                        let color_lines = render_terminal_colors_lines(colors_config);
-                        lines.extend(color_lines);
-                    }
+                    let color_lines = render_terminal_colors_lines(&custom.terminal_colors);
+                    lines.extend(color_lines);
                 }
             }
             config::ModuleType::Clock => {
                 if let Some(ref custom) = app.config.custom {
-                    if custom.clock.is_some() {
-                        let time = Local::now().format("%H:%M:%S").to_string();
-                        lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
-                    }
+                    let time = Local::now().format("%H:%M:%S").to_string();
+                    lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
                 }
             }
             config::ModuleType::Help => {

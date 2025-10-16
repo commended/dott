@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use std::collections::BTreeMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -59,25 +58,12 @@ pub struct Structure {
     pub position: Position,
     
     #[serde(default = "default_build")]
-    #[serde(deserialize_with = "deserialize_string_key_map")]
-    pub build: BTreeMap<u32, String>,
+    pub build: Vec<StructureBuildItem>,
 }
 
-fn deserialize_string_key_map<'de, D>(deserializer: D) -> Result<BTreeMap<u32, String>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    use serde::de::Error;
-    let string_map: BTreeMap<String, String> = BTreeMap::deserialize(deserializer)?;
-    let mut result = BTreeMap::new();
-    
-    for (key, value) in string_map {
-        let num_key = key.parse::<u32>()
-            .map_err(|e| D::Error::custom(format!("Failed to parse key '{}' as u32: {}", key, e)))?;
-        result.insert(num_key, value);
-    }
-    
-    Ok(result)
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct StructureBuildItem {
+    pub module: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -92,12 +78,12 @@ fn default_position() -> Position {
     Position::Center
 }
 
-fn default_build() -> BTreeMap<u32, String> {
-    let mut build = BTreeMap::new();
-    build.insert(1, "logo".to_string());
-    build.insert(2, "entries".to_string());
-    build.insert(3, "help".to_string());
-    build
+fn default_build() -> Vec<StructureBuildItem> {
+    vec![
+        StructureBuildItem { module: "logo".to_string() },
+        StructureBuildItem { module: "entries".to_string() },
+        StructureBuildItem { module: "help".to_string() },
+    ]
 }
 
 fn default_structure() -> Structure {
@@ -109,14 +95,26 @@ fn default_structure() -> Structure {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CustomModules {
-    #[serde(default)]
-    pub terminal_colors: Option<TerminalColorsConfig>,
+    #[serde(default = "default_terminal_colors")]
+    pub terminal_colors: TerminalColorsConfig,
 
     #[serde(default)]
-    pub clock: Option<ClockConfig>,
+    pub clock: ClockConfig,
 
-    #[serde(default)]
-    pub break_: Option<BreakConfig>,
+    #[serde(default = "default_break_config")]
+    pub break_: BreakConfig,
+}
+
+fn default_terminal_colors() -> TerminalColorsConfig {
+    TerminalColorsConfig {
+        shape: default_color_shape(),
+    }
+}
+
+fn default_break_config() -> BreakConfig {
+    BreakConfig {
+        lines: default_break_lines(),
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -189,7 +187,7 @@ fn default_color_shape() -> ColorShape {
     ColorShape::Circles
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct ClockConfig {
     // Position is now determined by structure.build order
     // No position field needed
@@ -239,7 +237,8 @@ impl Config {
     pub fn get_ordered_modules(&self) -> Vec<OrderedModule> {
         let mut modules = Vec::new();
         
-        for (order, module_name) in &self.structure.build {
+        for (order, build_item) in self.structure.build.iter().enumerate() {
+            let module_name = &build_item.module;
             let module_type = if module_name.starts_with("logo") {
                 // Parse logo type from "logo", "logo:default", "logo:custom", or "logo:image"
                 let logo_type = if module_name == "logo" {
@@ -278,7 +277,7 @@ impl Config {
             
             if let Some(mt) = module_type {
                 modules.push(OrderedModule {
-                    order: *order,
+                    order: order as u32,
                     module_type: mt,
                 });
             }
@@ -290,9 +289,7 @@ impl Config {
     /// Get the number of lines for a break module
     pub fn get_break_lines(&self) -> usize {
         if let Some(ref custom) = self.custom {
-            if let Some(ref break_config) = custom.break_ {
-                return break_config.lines;
-            }
+            return custom.break_.lines;
         }
         2 // Default to 2 lines
     }
