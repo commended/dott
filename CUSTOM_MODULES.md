@@ -9,8 +9,8 @@ Custom modules are configured in the `[custom]` section of your config file. The
 ## Available Custom Modules
 
 ### 1. Logo
-**Location in structure.build**: `"logo"`
-**Configuration**: Top-level config options
+**Location in structure.build**: `"logo"`, `"logo:default"`, `"logo:custom"`, or `"logo:image"`
+**Configuration**: Top-level config options (for backward compatibility) or in structure.build
 **Description**: Displays the application logo at the top of the interface.
 
 **Types**:
@@ -20,7 +20,21 @@ Custom modules are configured in the `[custom]` section of your config file. The
 
 **Configuration Options**:
 ```toml
+# Method 1: Top-level configuration (backward compatible)
 logo_type = "default"  # or "custom" or "image"
+custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
+image_logo_path = "/path/to/image.png"  # For image type
+
+[structure.build]
+1 = "logo"  # Uses the logo_type setting above
+```
+
+```toml
+# Method 2: Specify logo type directly in structure.build (recommended)
+[structure.build]
+1 = "logo:default"  # or "logo:custom" or "logo:image"
+
+# Still need to specify paths for custom/image types
 custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
 image_logo_path = "/path/to/image.png"  # For image type
 ```
@@ -92,18 +106,30 @@ Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
 
 ### 6. Break
 **Location in structure.build**: `"break"`
-**Configuration**: Not configurable
-**Description**: Inserts an empty line in the UI. Useful for visually separating different sections or entry groups.
+**Configuration**: `[custom.break]`
+**Description**: Inserts empty lines in the UI. By default, each break adds 2 empty lines. This can be configured via `[custom.break]`.
+
+**Configuration Options**:
+```toml
+[custom.break]
+lines = 2  # Number of empty lines to insert (default: 2)
+```
 
 **Example Usage**:
 ```toml
 [structure.build]
 1 = "logo"
 2 = "entries"
-3 = "break"      # Empty line here
+3 = "break"      # Adds 2 empty lines (or custom amount)
 4 = "entries2"
-5 = "help"
+5 = "break"      # Adds another 2 empty lines (or custom amount)
+6 = "help"
+
+[custom.break]
+lines = 3  # Each break now adds 3 empty lines instead of 2
 ```
+
+**Note**: You can use multiple `"break"` entries in your structure.build. Each will insert the configured number of empty lines.
 
 ### 7. Quit
 **Location in structure.build**: `"quit"`
@@ -187,15 +213,13 @@ args = []
 position = "center"
 
 [structure.build]
-1 = "logo"
+1 = "logo:default"  # Logo type specified in structure.build
 2 = "clock"
 3 = "entries"
-4 = "break"
+4 = "break"        # Add spacing between entry groups
 5 = "entries2"
 6 = "colors"
 7 = "help"
-
-logo_type = "default"
 
 # First group of entries
 [[entries]]
@@ -225,6 +249,9 @@ args = []
 shape = "circles"
 
 [custom.clock]
+
+[custom.break]
+lines = 2  # Each break adds 2 empty lines
 ```
 
 ### Full Configuration
