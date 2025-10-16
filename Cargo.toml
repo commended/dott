@@ -2,7 +2,6 @@
 name = "dott"
 version = "0.1.0"
 edition = "2025"
-authors = "aug, squadwipe@protonmail.com"
 description = "clean tui with extreme customization"
 liscence = "MIT"
 repository = "https://github.com/commended/dott"
