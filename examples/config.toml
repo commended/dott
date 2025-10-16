@@ -1,36 +1,47 @@
+# Structure defines the layout and order of modules
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo"
+2 = "entries"
+3 = "colors"
+4 = "clock"
+5 = "help"
+
 logo_type = "default"
 
-[[menu_items]]
+[[entries]]
 name = "View Dotfiles"
 command = "yazi"
 args = []
 
-[[menu_items]]
+[[entries]]
 name = "Edit Neovim Config"
 command = "nvim"
 args = ["~/.config/nvim/init.lua"]
 
-[[menu_items]]
+[[entries]]
 name = "Edit Shell Config"
 command = "nvim"
 args = ["~/.bashrc"]
 
-[[menu_items]]
+[[entries]]
 name = "System Monitor"
 command = "htop"
 args = []
 
-[[menu_items]]
+[[entries]]
 name = "Git Status"
 command = "lazygit"
 args = []
 
-[[menu_items]]
+[[entries]]
 name = "Configure Dott"
 command = "nvim"
 args = ["~/.config/dott/config.toml"]
 
-[[menu_items]]
+[[entries]]
 name = "Quit"
 command = ""
 args = []

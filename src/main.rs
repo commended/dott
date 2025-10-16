@@ -138,19 +138,19 @@ impl App {
     }
 
     fn next(&mut self) {
-        self.selected = (self.selected + 1) % self.config.menu_items.len();
+        self.selected = (self.selected + 1) % self.config.entries.len();
     }
 
     fn previous(&mut self) {
         if self.selected > 0 {
             self.selected -= 1;
         } else {
-            self.selected = self.config.menu_items.len() - 1;
+            self.selected = self.config.entries.len() - 1;
         }
     }
 
     fn get_selected_item(&self) -> &config::MenuItem {
-        &self.config.menu_items[self.selected]
+        &self.config.entries[self.selected]
     }
 }
 
@@ -421,7 +421,7 @@ fn ui(f: &mut Frame, app: &App) {
 
     let items: Vec<ListItem> = app
         .config
-        .menu_items
+        .entries
         .iter()
         .enumerate()
         .map(|(i, item)| {
@@ -450,7 +450,7 @@ fn ui(f: &mut Frame, app: &App) {
     f.render_widget(list, menu_horizontal[1]);
 
     // Display the command for the selected item
-    let selected_item = &app.config.menu_items[app.selected];
+    let selected_item = &app.config.entries[app.selected];
     let command_text = if !selected_item.command.is_empty() {
         if selected_item.args.is_empty() {
             format!("Command: {}", selected_item.command)
@@ -482,7 +482,7 @@ fn ui(f: &mut Frame, app: &App) {
         let command_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3),
+                Constraint::Length(logo_line_count as u16 + app.config.entries.len() as u16 + 3),
                 Constraint::Min(0),
             ])
             .split(vertical_chunks[1]);
@@ -500,16 +500,18 @@ fn ui(f: &mut Frame, app: &App) {
     }
 
     // Render terminal colors module if configured (after menu items)
-    if app.config.terminal_colors.is_some() {
-        let colors_area = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 4),
-                Constraint::Min(0),
-            ])
-            .split(vertical_chunks[1]);
-        
-        render_terminal_colors(f, colors_area[1], &app.config);
+    if let Some(ref custom) = app.config.custom {
+        if custom.terminal_colors.is_some() {
+            let colors_area = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([
+                    Constraint::Length(logo_line_count as u16 + app.config.entries.len() as u16 + 4),
+                    Constraint::Min(0),
+                ])
+                .split(vertical_chunks[1]);
+            
+            render_terminal_colors(f, colors_area[1], &app.config);
+        }
     }
 
     // Help text at bottom
@@ -519,8 +521,10 @@ fn ui(f: &mut Frame, app: &App) {
     f.render_widget(help, vertical_chunks[2]);
 
     // Render clock directly under keybindings if configured
-    if app.config.clock.is_some() {
-        render_clock_under_keybindings(f, vertical_chunks[2]);
+    if let Some(ref custom) = app.config.custom {
+        if custom.clock.is_some() {
+            render_clock_under_keybindings(f, vertical_chunks[2]);
+        }
     }
 }
 
@@ -544,67 +548,69 @@ fn render_clock_under_keybindings(f: &mut Frame, area: ratatui::layout::Rect) {
 }
 
 fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &Config) {
-    if let Some(ref colors_config) = config.terminal_colors {
-        let colors = vec![
-            Color::Black,
-            Color::Red,
-            Color::Green,
-            Color::Yellow,
-            Color::Blue,
-            Color::Magenta,
-            Color::Cyan,
-            Color::White,
-        ];
+    if let Some(ref custom) = config.custom {
+        if let Some(ref colors_config) = custom.terminal_colors {
+            let colors = vec![
+                Color::Black,
+                Color::Red,
+                Color::Green,
+                Color::Yellow,
+                Color::Blue,
+                Color::Magenta,
+                Color::Cyan,
+                Color::White,
+            ];
 
-        match colors_config.shape {
-            config::ColorShape::Circles => {
-                // 1 row of 8 circles
-                let color_area = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(1),
-                        Constraint::Min(0),
-                    ])
-                    .split(area);
+            match colors_config.shape {
+                config::ColorShape::Circles => {
+                    // 1 row of 8 circles
+                    let color_area = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([
+                            Constraint::Length(1),
+                            Constraint::Min(0),
+                        ])
+                        .split(area);
 
-                let mut spans = vec![];
-                for color in &colors {
-                    spans.push(Span::styled("● ", Style::default().fg(*color)));
+                    let mut spans = vec![];
+                    for color in &colors {
+                        spans.push(Span::styled("● ", Style::default().fg(*color)));
+                    }
+                    
+                    let line = Line::from(spans);
+                    let colors_display = Paragraph::new(line)
+                        .alignment(Alignment::Center);
+                    
+                    f.render_widget(colors_display, color_area[0]);
                 }
-                
-                let line = Line::from(spans);
-                let colors_display = Paragraph::new(line)
-                    .alignment(Alignment::Center);
-                
-                f.render_widget(colors_display, color_area[0]);
-            }
-            config::ColorShape::Squares => {
-                // 2 rows with 4 squares each
-                let color_area = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints([
-                        Constraint::Length(2),
-                        Constraint::Min(0),
-                    ])
-                    .split(area);
+                config::ColorShape::Squares => {
+                    // 2 rows with 4 squares each
+                    let color_area = Layout::default()
+                        .direction(Direction::Vertical)
+                        .constraints([
+                            Constraint::Length(2),
+                            Constraint::Min(0),
+                        ])
+                        .split(area);
 
-                // First row
-                let mut spans_row1 = vec![];
-                for color in colors.iter().take(4) {
-                    spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
+                    // First row
+                    let mut spans_row1 = vec![];
+                    for color in colors.iter().take(4) {
+                        spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
+                    }
+                    
+                    // Second row
+                    let mut spans_row2 = vec![];
+                    for color in colors.iter().skip(4).take(4) {
+                        spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
+                    }
+                    
+                    let lines = vec![Line::from(spans_row1), Line::from(spans_row2)];
+                    let colors_display = Paragraph::new(lines)
+                        .alignment(Alignment::Center);
+                    
+                    f.render_widget(colors_display, color_area[0]);
                 }
-                
-                // Second row
-                let mut spans_row2 = vec![];
-                for color in colors.iter().skip(4).take(4) {
-                    spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
-                }
-                
-                let lines = vec![Line::from(spans_row1), Line::from(spans_row2)];
-                let colors_display = Paragraph::new(lines)
-                    .alignment(Alignment::Center);
-                
-                f.render_widget(colors_display, color_area[0]);
             }
         }
     }
