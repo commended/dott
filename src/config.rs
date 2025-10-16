@@ -59,7 +59,25 @@ pub struct Structure {
     pub position: Position,
     
     #[serde(default = "default_build")]
+    #[serde(deserialize_with = "deserialize_string_key_map")]
     pub build: BTreeMap<u32, String>,
+}
+
+fn deserialize_string_key_map<'de, D>(deserializer: D) -> Result<BTreeMap<u32, String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::Error;
+    let string_map: BTreeMap<String, String> = BTreeMap::deserialize(deserializer)?;
+    let mut result = BTreeMap::new();
+    
+    for (key, value) in string_map {
+        let num_key = key.parse::<u32>()
+            .map_err(|e| D::Error::custom(format!("Failed to parse key '{}' as u32: {}", key, e)))?;
+        result.insert(num_key, value);
+    }
+    
+    Ok(result)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -78,9 +96,7 @@ fn default_build() -> BTreeMap<u32, String> {
     let mut build = BTreeMap::new();
     build.insert(1, "logo".to_string());
     build.insert(2, "entries".to_string());
-    build.insert(3, "colors".to_string());
-    build.insert(4, "clock".to_string());
-    build.insert(5, "help".to_string());
+    build.insert(3, "help".to_string());
     build
 }
 
