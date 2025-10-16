@@ -1,0 +1,40 @@
+# Dott Configuration Example - Logo Type in Structure Build
+# This example demonstrates specifying logo type directly in structure.build
+
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo:default"   # Logo type specified here (can be "logo:default", "logo:custom", or "logo:image")
+2 = "break"
+3 = "entries"
+4 = "break"
+5 = "help"
+
+# Entries - terminal commands with name, command, and arguments
+[[entries]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries]]
+name = "Edit Dott Config"
+command = ""
+args = []
+
+[[entries]]
+name = "View Shell"
+command = ""
+args = []
+
+[[entries]]
+name = "Quit"
+command = ""
+args = []
+
+# Optional: Custom modules (hardcoded components)
+[custom]
+
+# Configure break to add custom number of empty lines
+[custom.break]
+lines = 3  # Each break adds 3 empty lines instead of default 2
