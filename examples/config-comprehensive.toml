@@ -1,0 +1,67 @@
+# Comprehensive Dott Configuration Example
+# Demonstrates all features including multiple entry clusters
+
+logo_type = "default"
+
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo"
+2 = "break"
+3 = "clock"
+4 = "break"
+5 = "entries"
+6 = "break"
+7 = "entries2"
+8 = "break"
+9 = "entries3"
+10 = "break"
+11 = "colors"
+12 = "break"
+13 = "help"
+
+# Development tools
+[[entries]]
+name = "Edit Neovim"
+command = "nvim"
+args = ["~/.config/nvim/init.lua"]
+
+[[entries]]
+name = "Edit Dott"
+command = "nvim"
+args = ["~/.config/dott/config.toml"]
+
+# File management
+[[entries2]]
+name = "Browse Config"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries2]]
+name = "Browse Home"
+command = "yazi"
+args = ["~"]
+
+# System tools
+[[entries3]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[[entries3]]
+name = "Git Status"
+command = "lazygit"
+args = []
+
+[[entries3]]
+name = "Quit"
+command = ""
+args = []
+
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]

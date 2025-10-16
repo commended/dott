@@ -90,6 +90,26 @@ Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
 - u: Reload configuration
 - q/Esc: Quit application
 
+### 6. Break
+**Location in structure.build**: `"break"`
+**Configuration**: Not configurable
+**Description**: Inserts an empty line in the UI. Useful for visually separating different sections or entry groups.
+
+**Example Usage**:
+```toml
+[structure.build]
+1 = "logo"
+2 = "entries"
+3 = "break"      # Empty line here
+4 = "entries2"
+5 = "help"
+```
+
+### 7. Quit
+**Location in structure.build**: `"quit"`
+**Configuration**: Not configurable
+**Description**: Exits the application immediately when encountered. This is different from the "Quit" entry which is a menu item the user can select. This module type would immediately quit when the structure is rendered, so it's typically not used in practice.
+
 ## Structure Configuration
 
 The `structure` section determines how modules are positioned and ordered:
@@ -116,6 +136,30 @@ The numbers (1, 2, 3, etc.) determine the vertical order in which modules appear
 - Reorder modules by changing the numbers
 - Skip modules by omitting them from the build order
 - Only include the modules you want to use
+- Use multiple entry groups (entries, entries2, entries3, entries4, entries5)
+- Add breaks (empty lines) between sections
+
+### Multiple Entry Groups:
+You can define multiple entry groups to organize your menu items. Each group appears in the order specified in structure.build:
+
+```toml
+[structure.build]
+1 = "logo"
+2 = "entries"      # First group
+3 = "break"        # Empty line
+4 = "entries2"     # Second group
+5 = "help"
+
+[[entries]]
+name = "Edit Config"
+command = "nvim"
+args = ["~/.config"]
+
+[[entries2]]
+name = "System Tools"
+command = "htop"
+args = []
+```
 
 ## Example Configurations
 
@@ -127,7 +171,7 @@ position = "center"
 [structure.build]
 1 = "logo"
 2 = "entries"
-5 = "help"
+3 = "help"
 
 logo_type = "default"
 
@@ -135,6 +179,52 @@ logo_type = "default"
 name = "Quit"
 command = ""
 args = []
+```
+
+### Multiple Entry Groups Configuration
+```toml
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo"
+2 = "clock"
+3 = "entries"
+4 = "break"
+5 = "entries2"
+6 = "colors"
+7 = "help"
+
+logo_type = "default"
+
+# First group of entries
+[[entries]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries]]
+name = "Edit Config"
+command = "nvim"
+args = ["~/.config/nvim/init.lua"]
+
+# Second group of entries
+[[entries2]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[[entries2]]
+name = "Quit"
+command = ""
+args = []
+
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
 ```
 
 ### Full Configuration
