@@ -21,7 +21,36 @@ pub struct Config {
     pub entries: Vec<MenuItem>,
 
     #[serde(default)]
+    pub entries2: Vec<MenuItem>,
+
+    #[serde(default)]
+    pub entries3: Vec<MenuItem>,
+
+    #[serde(default)]
+    pub entries4: Vec<MenuItem>,
+
+    #[serde(default)]
+    pub entries5: Vec<MenuItem>,
+
+    #[serde(default)]
     pub custom: Option<CustomModules>,
+}
+
+#[derive(Debug, Clone)]
+pub struct OrderedModule {
+    pub order: u32,
+    pub module_type: ModuleType,
+}
+
+#[derive(Debug, Clone)]
+pub enum ModuleType {
+    Logo,
+    Entries(String), // String indicates which entries array (e.g., "entries", "entries2")
+    Colors,
+    Clock,
+    Help,
+    Break,
+    Quit,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -155,8 +184,57 @@ impl Default for Config {
             custom_logo_path: default_logo_path(),
             image_logo_path: default_image_path(),
             entries: default_entries(),
+            entries2: Vec::new(),
+            entries3: Vec::new(),
+            entries4: Vec::new(),
+            entries5: Vec::new(),
             custom: None,
         }
+    }
+}
+
+impl Config {
+    /// Get all entries for a specific entries group name (e.g., "entries", "entries2")
+    pub fn get_entries(&self, name: &str) -> &[MenuItem] {
+        match name {
+            "entries" => &self.entries,
+            "entries2" => &self.entries2,
+            "entries3" => &self.entries3,
+            "entries4" => &self.entries4,
+            "entries5" => &self.entries5,
+            _ => &[],
+        }
+    }
+
+    /// Get all modules ordered according to structure.build
+    pub fn get_ordered_modules(&self) -> Vec<OrderedModule> {
+        let mut modules = Vec::new();
+        
+        for (order, module_name) in &self.structure.build {
+            let module_type = match module_name.as_str() {
+                "logo" => Some(ModuleType::Logo),
+                "entries" => Some(ModuleType::Entries("entries".to_string())),
+                "entries2" => Some(ModuleType::Entries("entries2".to_string())),
+                "entries3" => Some(ModuleType::Entries("entries3".to_string())),
+                "entries4" => Some(ModuleType::Entries("entries4".to_string())),
+                "entries5" => Some(ModuleType::Entries("entries5".to_string())),
+                "colors" => Some(ModuleType::Colors),
+                "clock" => Some(ModuleType::Clock),
+                "help" => Some(ModuleType::Help),
+                "break" => Some(ModuleType::Break),
+                "quit" => Some(ModuleType::Quit),
+                _ => None,
+            };
+            
+            if let Some(mt) = module_type {
+                modules.push(OrderedModule {
+                    order: *order,
+                    module_type: mt,
+                });
+            }
+        }
+        
+        modules
     }
 }
 
