@@ -31,7 +31,7 @@ dott
 ```
 
 The TUI features:
-- **Rounded selection**: Selected menu items are highlighted with rounded brackets `( )`
+- **Highlighted selection**: Selected menu items are highlighted with a cyan background
 - **Keyboard navigation**: Use arrow keys or vim-style `j`/`k` to navigate
 - **Quick actions**: Press Enter to execute the selected menu item
 

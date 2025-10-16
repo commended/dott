@@ -399,7 +399,7 @@ fn ui(f: &mut Frame, app: &App) {
         .map(|(i, item)| {
             let (prefix, style) = if i == app.selected {
                 (
-                    "( ",
+                    "> ",
                     Style::default()
                         .fg(Color::Black)
                         .bg(Color::Cyan)
@@ -407,12 +407,11 @@ fn ui(f: &mut Frame, app: &App) {
                 )
             } else {
                 (
-                    "  ",
+                    "> ",
                     Style::default().fg(Color::White)
                 )
             };
-            let suffix = if i == app.selected { " )" } else { "  " };
-            ListItem::new(Line::from(Span::styled(format!("{}{}{}", prefix, item.name, suffix), style)))
+            ListItem::new(Line::from(Span::styled(format!("{}{}  ", prefix, item.name), style)))
         })
         .collect();
 
