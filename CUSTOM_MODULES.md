@@ -216,6 +216,129 @@ When "System Monitor" is highlighted, the selected module will display: `Selecte
 **Configuration**: Not configurable
 **Description**: Exits the application immediately when encountered. This is different from the "Quit" entry which is a menu item the user can select. This module type would immediately quit when the structure is rendered, so it's typically not used in practice.
 
+### 9. System Info
+**Location in structure.build**: `module = "system_info"` or `module = "systeminfo"`
+**Configuration**: `[custom.system_info]`
+**Description**: Displays system information including hostname, operating system, and kernel version.
+
+**Configuration**:
+```toml
+[custom]
+
+[custom.system_info]
+```
+
+**Display Format**:
+Shows: `󰇄 hostname | os | kernel`
+
+**Example**: `󰇄 laptop | linux | 6.5.0-28-generic`
+
+**Note**: The system_info module must be declared in `[custom.system_info]` even though it has no configurable settings.
+
+### 10. Weather
+**Location in structure.build**: `module = "weather"`
+**Configuration**: `[custom.weather]`
+**Description**: Displays weather information for a specified location (placeholder for now, can be extended with API integration).
+
+**Configuration Options**:
+```toml
+[custom]
+
+[custom.weather]
+location = "New York"
+units = "metric"  # or "imperial"
+```
+
+**Options**:
+- `location`: The location for weather information (optional)
+- `units`: Temperature units - "metric" (Celsius) or "imperial" (Fahrenheit)
+
+**Note**: This is currently a placeholder module. Real weather data would require API integration.
+
+### 11. Quote
+**Location in structure.build**: `module = "quote"`
+**Configuration**: `[custom.quote]`
+**Description**: Displays a random quote from a configured list. Great for inspiration and motivation!
+
+**Configuration Options**:
+```toml
+[custom]
+
+[custom.quote]
+quotes = [
+    "The only way to do great work is to love what you do. - Steve Jobs",
+    "Code is like humor. When you have to explain it, it's bad. - Cory House",
+    "First, solve the problem. Then, write the code. - John Johnson",
+]
+```
+
+**Default Quotes**:
+If no quotes are provided, a default set of programming and inspirational quotes is used.
+
+**Features**:
+- Randomly selects a quote each time
+- Automatically wraps long quotes to multiple lines (max 80 characters per line)
+- Displays in italic yellow text
+
+### 12. Uptime
+**Location in structure.build**: `module = "uptime"`
+**Configuration**: `[custom.uptime]`
+**Description**: Displays system uptime showing how long the system has been running.
+
+**Configuration**:
+```toml
+[custom]
+
+[custom.uptime]
+```
+
+**Display Format**:
+- Shows days, hours, and minutes: ` Uptime: 2d 5h 30m`
+- If less than 1 day: ` Uptime: 5h 30m`
+- If less than 1 hour: ` Uptime: 30m`
+
+**Note**: Currently only supported on Linux systems.
+
+### 13. Disk Usage
+**Location in structure.build**: `module = "disk_usage"`, `module = "diskusage"`, or `module = "disk"`
+**Configuration**: `[custom.disk_usage]`
+**Description**: Displays disk usage information for a specified mount point.
+
+**Configuration Options**:
+```toml
+[custom]
+
+[custom.disk_usage]
+path = "/"  # Mount point to check (default: "/")
+```
+
+**Options**:
+- `path`: The mount point to check disk usage for (default: "/")
+
+**Display Format**:
+Shows: ` Disk: used GB / total GB (percentage%)`
+
+**Example**: ` Disk: 45 / 100 GB (45%)`
+
+### 14. Memory
+**Location in structure.build**: `module = "memory"` or `module = "mem"`
+**Configuration**: `[custom.memory]`
+**Description**: Displays current memory (RAM) usage.
+
+**Configuration**:
+```toml
+[custom]
+
+[custom.memory]
+```
+
+**Display Format**:
+Shows: ` Memory: used MB / total MB (percentage%)`
+
+**Example**: ` Memory: 8192 / 16384 MB (50%)`
+
+**Note**: The memory module must be declared in `[custom.memory]` even though it has no configurable settings.
+
 ## Structure Configuration
 
 The `structure` section determines how modules are positioned and ordered:
@@ -475,6 +598,99 @@ module = "help"
 logo_type = "default"
 
 # ... rest of config
+```
+
+### Creative Modules Configuration
+```toml
+# Showcase all creative system monitoring modules
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "system_info"
+
+[[structure.build]]
+module = "uptime"
+
+[[structure.build]]
+module = "memory"
+
+[[structure.build]]
+module = "disk"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "quote"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "selected"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+logo_type = "default"
+
+# Entries
+[[entries]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[[entries]]
+name = "Quit"
+command = ""
+args = []
+
+# Custom modules configuration
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
+
+[custom.selected]
+
+[custom.break]
+lines = 2
+
+[custom.system_info]
+
+[custom.uptime]
+
+[custom.memory]
+
+[custom.disk_usage]
+path = "/"
+
+[custom.weather]
+location = "New York"
+units = "metric"
+
+[custom.quote]
+quotes = [
+    "The only way to do great work is to love what you do. - Steve Jobs",
+    "Code is like humor. When you have to explain it, it's bad. - Cory House",
+    "First, solve the problem. Then, write the code. - John Johnson",
+]
 ```
 
 ## Migration from Old Config Format

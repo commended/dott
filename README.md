@@ -50,6 +50,7 @@ The config file is located at `~/.config/dott/config.toml`. You can customize:
 - **Entries**: Terminal commands with name, command, and arguments
 - **Multiple Entry Groups**: Create separate entry groups (entries, entries2, entries3, etc.)
 - **Custom Modules**: Terminal colors, clock, help text, and configurable breaks (must be declared to use)
+- **Creative Modules**: System info, uptime, memory usage, disk usage, quotes, and weather (must be declared to use)
 - **Break Lines**: Configure how many empty lines each break adds (default: 2)
 
 Example structure with multiple entry groups:

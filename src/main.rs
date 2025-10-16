@@ -17,6 +17,8 @@ use ratatui::{
 use std::io;
 use chrono::Local;
 use std::io::Write;
+use rand::seq::SliceRandom;
+use sysinfo::{System, Disks};
 
 const DOTT_LOGO: &str = r#"
     ;'*¨'`·- .,  ‘                   , ·. ,.-·~·.,   ‘             ,  . .,  °             ,  . .,  °    
@@ -123,7 +125,6 @@ fn detect_shell_config() -> Option<String> {
 struct App {
     selected: usize,
     config: Config,
-    detected_shell_config: Option<String>,
     // Flattened list of all entries with their group names
     all_entries: Vec<(String, config::MenuItem)>,
 }
@@ -131,7 +132,6 @@ struct App {
 impl App {
     fn new() -> App {
         let config = Config::load();
-        let detected_shell_config = detect_shell_config();
         
         // Build a flattened list of all entries in the order they appear in structure.build
         let mut all_entries = Vec::new();
@@ -147,7 +147,6 @@ impl App {
         App {
             selected: 0,
             config,
-            detected_shell_config,
             all_entries,
         }
     }
@@ -238,17 +237,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
                     KeyCode::Char('u') => {
-                        // Exit TUI temporarily
-                        disable_raw_mode()?;
-                        execute!(
-                            terminal.backend_mut(),
-                            LeaveAlternateScreen,
-                            DisableMouseCapture
-                        )?;
-                        terminal.show_cursor()?;
-
-                        // Reload config
-                        println!("Reloading config...");
+                        // Reload config silently (only show errors)
                         app.config = Config::load();
                         app.selected = 0;
                         
@@ -263,18 +252,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                             }
                         }
                         
-                        println!("✓ Config reloaded!");
-
-                        // Small delay to let user see the message
-                        std::thread::sleep(std::time::Duration::from_millis(500));
-
-                        // Restore TUI
-                        enable_raw_mode()?;
-                        execute!(
-                            terminal.backend_mut(),
-                            EnterAlternateScreen,
-                            EnableMouseCapture
-                        )?;
+                        // Redraw immediately
                         terminal.clear()?;
                     }
                     KeyCode::Enter => {
@@ -423,13 +401,13 @@ fn ui(f: &mut Frame, app: &App) {
                 }
             }
             config::ModuleType::Colors => {
-                if let Some(ref custom) = app.config.custom {
-                    let color_lines = render_terminal_colors_lines(&custom.terminal_colors);
+                if let Some(ref _custom) = app.config.custom {
+                    let color_lines = render_terminal_colors_lines(&app.config.custom.as_ref().unwrap().terminal_colors);
                     lines.extend(color_lines);
                 }
             }
             config::ModuleType::Clock => {
-                if let Some(ref custom) = app.config.custom {
+                if let Some(ref _custom) = app.config.custom {
                     let time = Local::now().format("%H:%M:%S").to_string();
                     lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
                 }
@@ -441,7 +419,7 @@ fn ui(f: &mut Frame, app: &App) {
                 )));
             }
             config::ModuleType::Selected => {
-                if let Some(ref custom) = app.config.custom {
+                if let Some(ref _custom) = app.config.custom {
                     if let Some(selected_entry) = app.get_selected_item() {
                         let command_text = if selected_entry.command.is_empty() {
                             // Handle special entries that don't have commands
@@ -476,6 +454,42 @@ fn ui(f: &mut Frame, app: &App) {
                 // Quit is a special entry that should be handled like other entries
                 // This is for when "quit" is used as a standalone module
             }
+            config::ModuleType::SystemInfo => {
+                if let Some(ref _custom) = app.config.custom {
+                    let system_lines = render_system_info();
+                    lines.extend(system_lines);
+                }
+            }
+            config::ModuleType::Weather => {
+                if let Some(ref custom) = app.config.custom {
+                    let weather_lines = render_weather(&custom.weather);
+                    lines.extend(weather_lines);
+                }
+            }
+            config::ModuleType::Quote => {
+                if let Some(ref custom) = app.config.custom {
+                    let quote_lines = render_quote(&custom.quote);
+                    lines.extend(quote_lines);
+                }
+            }
+            config::ModuleType::Uptime => {
+                if let Some(ref _custom) = app.config.custom {
+                    let uptime_lines = render_uptime();
+                    lines.extend(uptime_lines);
+                }
+            }
+            config::ModuleType::DiskUsage => {
+                if let Some(ref custom) = app.config.custom {
+                    let disk_lines = render_disk_usage(&custom.disk_usage);
+                    lines.extend(disk_lines);
+                }
+            }
+            config::ModuleType::Memory => {
+                if let Some(ref _custom) = app.config.custom {
+                    let memory_lines = render_memory();
+                    lines.extend(memory_lines);
+                }
+            }
         }
     }
     
@@ -485,10 +499,6 @@ fn ui(f: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::White));
     
     f.render_widget(paragraph, size);
-}
-
-fn get_logo_text(config: &Config) -> String {
-    get_logo_text_with_type(&config.logo_type, config)
 }
 
 fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> String {
@@ -549,6 +559,202 @@ fn render_terminal_colors_lines(colors_config: &config::TerminalColorsConfig) ->
             lines.push(Line::from(spans_row2));
         }
     }
+    
+    lines
+}
+
+fn render_system_info() -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    // Get hostname
+    let hostname = std::env::var("HOSTNAME")
+        .or_else(|_| std::env::var("HOST"))
+        .unwrap_or_else(|_| {
+            // Try to read from /etc/hostname
+            std::fs::read_to_string("/etc/hostname")
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|_| "unknown".to_string())
+        });
+    
+    // Get OS info
+    let os = std::env::consts::OS;
+    
+    // Get kernel version (Linux only)
+    let kernel = if cfg!(target_os = "linux") {
+        std::fs::read_to_string("/proc/version")
+            .ok()
+            .and_then(|v| v.split_whitespace().nth(2).map(|s| s.to_string()))
+            .unwrap_or_else(|| "unknown".to_string())
+    } else {
+        std::env::consts::ARCH.to_string()
+    };
+    
+    lines.push(Line::from(Span::styled(
+        format!("󰇄 {} | {} | {}", hostname, os, kernel),
+        Style::default().fg(Color::Magenta)
+    )));
+    
+    lines
+}
+
+fn render_weather(config: &config::WeatherConfig) -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    // For now, just show a placeholder
+    // Real implementation would fetch from a weather API
+    if let Some(ref location) = config.location {
+        lines.push(Line::from(Span::styled(
+            format!("󰖐 Weather in {}: Coming soon!", location),
+            Style::default().fg(Color::Blue)
+        )));
+    } else {
+        lines.push(Line::from(Span::styled(
+            "󰖐 Weather: Set location in config".to_string(),
+            Style::default().fg(Color::DarkGray)
+        )));
+    }
+    
+    lines
+}
+
+fn render_quote(config: &config::QuoteConfig) -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    if !config.quotes.is_empty() {
+        let mut rng = rand::thread_rng();
+        if let Some(quote) = config.quotes.choose(&mut rng) {
+            // Split long quotes into multiple lines
+            let max_width = 80;
+            let words: Vec<&str> = quote.split_whitespace().collect();
+            let mut current_line = String::new();
+            
+            for word in words {
+                if current_line.len() + word.len() + 1 > max_width {
+                    if !current_line.is_empty() {
+                        lines.push(Line::from(Span::styled(
+                            current_line.clone(),
+                            Style::default().fg(Color::Yellow).add_modifier(Modifier::ITALIC)
+                        )));
+                        current_line.clear();
+                    }
+                }
+                if !current_line.is_empty() {
+                    current_line.push(' ');
+                }
+                current_line.push_str(word);
+            }
+            
+            if !current_line.is_empty() {
+                lines.push(Line::from(Span::styled(
+                    current_line,
+                    Style::default().fg(Color::Yellow).add_modifier(Modifier::ITALIC)
+                )));
+            }
+        }
+    } else {
+        lines.push(Line::from(Span::styled(
+            " Add quotes to your config!".to_string(),
+            Style::default().fg(Color::DarkGray)
+        )));
+    }
+    
+    lines
+}
+
+fn render_uptime() -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    let uptime = if cfg!(target_os = "linux") {
+        std::fs::read_to_string("/proc/uptime")
+            .ok()
+            .and_then(|content| {
+                content.split_whitespace().next().and_then(|s| s.parse::<f64>().ok())
+            })
+            .map(|seconds| {
+                let days = (seconds / 86400.0) as u64;
+                let hours = ((seconds % 86400.0) / 3600.0) as u64;
+                let minutes = ((seconds % 3600.0) / 60.0) as u64;
+                
+                if days > 0 {
+                    format!("{}d {}h {}m", days, hours, minutes)
+                } else if hours > 0 {
+                    format!("{}h {}m", hours, minutes)
+                } else {
+                    format!("{}m", minutes)
+                }
+            })
+            .unwrap_or_else(|| "unknown".to_string())
+    } else {
+        "not supported".to_string()
+    };
+    
+    lines.push(Line::from(Span::styled(
+        format!(" Uptime: {}", uptime),
+        Style::default().fg(Color::Green)
+    )));
+    
+    lines
+}
+
+fn render_disk_usage(config: &config::DiskUsageConfig) -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    let disks = Disks::new_with_refreshed_list();
+    
+    // Find the disk matching the configured path
+    for disk in &disks {
+        if disk.mount_point().to_str() == Some(&config.path) {
+            let total = disk.total_space();
+            let available = disk.available_space();
+            let used = total - available;
+            let usage_percent = if total > 0 {
+                (used as f64 / total as f64 * 100.0) as u64
+            } else {
+                0
+            };
+            
+            let total_gb = total / (1024 * 1024 * 1024);
+            let used_gb = used / (1024 * 1024 * 1024);
+            
+            lines.push(Line::from(Span::styled(
+                format!(" Disk: {} / {} GB ({}%)", used_gb, total_gb, usage_percent),
+                Style::default().fg(Color::Cyan)
+            )));
+            break;
+        }
+    }
+    
+    if lines.is_empty() {
+        lines.push(Line::from(Span::styled(
+            format!(" Disk: path not found ({})", config.path),
+            Style::default().fg(Color::DarkGray)
+        )));
+    }
+    
+    lines
+}
+
+fn render_memory() -> Vec<Line<'static>> {
+    let mut lines = Vec::new();
+    
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+    
+    let total = sys.total_memory();
+    let used = sys.used_memory();
+    let usage_percent = if total > 0 {
+        (used as f64 / total as f64 * 100.0) as u64
+    } else {
+        0
+    };
+    
+    let total_gb = total / (1024 * 1024);
+    let used_gb = used / (1024 * 1024);
+    
+    lines.push(Line::from(Span::styled(
+        format!(" Memory: {} / {} MB ({}%)", used_gb, total_gb, usage_percent),
+        Style::default().fg(Color::LightBlue)
+    )));
     
     lines
 }
