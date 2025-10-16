@@ -8,10 +8,10 @@ use crossterm::{
 };
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::Alignment,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, List, ListItem, Paragraph},
+    widgets::Paragraph,
     Frame, Terminal,
 };
 use std::io;
@@ -124,33 +124,52 @@ struct App {
     selected: usize,
     config: Config,
     detected_shell_config: Option<String>,
+    // Flattened list of all entries with their group names
+    all_entries: Vec<(String, config::MenuItem)>,
 }
 
 impl App {
     fn new() -> App {
         let config = Config::load();
         let detected_shell_config = detect_shell_config();
+        
+        // Build a flattened list of all entries in the order they appear in structure.build
+        let mut all_entries = Vec::new();
+        for module in config.get_ordered_modules() {
+            if let config::ModuleType::Entries(group_name) = module.module_type {
+                let entries = config.get_entries(&group_name);
+                for entry in entries {
+                    all_entries.push((group_name.clone(), entry.clone()));
+                }
+            }
+        }
+        
         App {
             selected: 0,
             config,
             detected_shell_config,
+            all_entries,
         }
     }
 
     fn next(&mut self) {
-        self.selected = (self.selected + 1) % self.config.entries.len();
-    }
-
-    fn previous(&mut self) {
-        if self.selected > 0 {
-            self.selected -= 1;
-        } else {
-            self.selected = self.config.entries.len() - 1;
+        if !self.all_entries.is_empty() {
+            self.selected = (self.selected + 1) % self.all_entries.len();
         }
     }
 
-    fn get_selected_item(&self) -> &config::MenuItem {
-        &self.config.entries[self.selected]
+    fn previous(&mut self) {
+        if !self.all_entries.is_empty() {
+            if self.selected > 0 {
+                self.selected -= 1;
+            } else {
+                self.selected = self.all_entries.len() - 1;
+            }
+        }
+    }
+
+    fn get_selected_item(&self) -> Option<&config::MenuItem> {
+        self.all_entries.get(self.selected).map(|(_, item)| item)
     }
 }
 
@@ -232,6 +251,18 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         println!("Reloading config...");
                         app.config = Config::load();
                         app.selected = 0;
+                        
+                        // Rebuild all_entries list
+                        app.all_entries.clear();
+                        for module in app.config.get_ordered_modules() {
+                            if let config::ModuleType::Entries(group_name) = module.module_type {
+                                let entries = app.config.get_entries(&group_name);
+                                for entry in entries {
+                                    app.all_entries.push((group_name.clone(), entry.clone()));
+                                }
+                            }
+                        }
+                        
                         println!("✓ Config reloaded!");
 
                         // Small delay to let user see the message
@@ -247,7 +278,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         terminal.clear()?;
                     }
                     KeyCode::Enter => {
-                    let selected = app.get_selected_item();
+                    if let Some(selected) = app.get_selected_item() {
                     
                     match selected.name.as_str() {
                         "Quit" => return Ok(()),
@@ -343,6 +374,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         }
                     }
                 }
+                }
                 _ => {}
             }
             }
@@ -352,266 +384,146 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
 
 fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
+    
+    // Get ordered modules from config
+    let ordered_modules = app.config.get_ordered_modules();
+    
+    // Pre-allocate logo text to extend its lifetime
+    let logo_text = get_logo_text(&app.config);
+    
+    // Build the layout dynamically based on modules
+    let mut lines = Vec::new();
+    let mut current_entry_index = 0;
+    
+    for module in &ordered_modules {
+        match &module.module_type {
+            config::ModuleType::Logo => {
+                for line in logo_text.lines() {
+                    lines.push(Line::from(Span::styled(line.to_string(), Style::default().fg(Color::Cyan))));
+                }
+            }
+            config::ModuleType::Entries(group_name) => {
+                let entries = app.config.get_entries(group_name);
+                for entry in entries {
+                    let is_selected = current_entry_index == app.selected;
+                    let (prefix, style) = if is_selected {
+                        (
+                            "> ",
+                            Style::default()
+                                .fg(Color::Black)
+                                .bg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD)
+                        )
+                    } else {
+                        (
+                            "> ",
+                            Style::default().fg(Color::White)
+                        )
+                    };
+                    lines.push(Line::from(Span::styled(format!("{}{}  ", prefix, entry.name), style)));
+                    current_entry_index += 1;
+                }
+            }
+            config::ModuleType::Colors => {
+                if let Some(ref custom) = app.config.custom {
+                    if let Some(ref colors_config) = custom.terminal_colors {
+                        let color_lines = render_terminal_colors_lines(colors_config);
+                        lines.extend(color_lines);
+                    }
+                }
+            }
+            config::ModuleType::Clock => {
+                if let Some(ref custom) = app.config.custom {
+                    if custom.clock.is_some() {
+                        let time = Local::now().format("%H:%M:%S").to_string();
+                        lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
+                    }
+                }
+            }
+            config::ModuleType::Help => {
+                lines.push(Line::from(Span::styled(
+                    "↑/k: Up | ↓/j: Down | Enter: Select | u: Reload Config | q/Esc: Quit".to_string(),
+                    Style::default().fg(Color::DarkGray)
+                )));
+            }
+            config::ModuleType::Break => {
+                lines.push(Line::from(""));
+            }
+            config::ModuleType::Quit => {
+                // Quit is a special entry that should be handled like other entries
+                // This is for when "quit" is used as a standalone module
+            }
+        }
+    }
+    
+    // Render everything centered
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::White));
+    
+    f.render_widget(paragraph, size);
+}
 
-    // Calculate 10% from top for logo positioning
-    let vertical_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(10),
-            Constraint::Min(0),
-            Constraint::Percentage(20),
-        ])
-        .split(size);
-
-    // Get logo based on configuration
-    let logo_text = match app.config.logo_type {
+fn get_logo_text(config: &Config) -> String {
+    match config.logo_type {
         config::LogoType::Default => DOTT_LOGO.to_string(),
         config::LogoType::Custom => {
-            if let Some(ref path) = app.config.custom_logo_path {
-                // Try to load custom ASCII art from file
+            if let Some(ref path) = config.custom_logo_path {
                 std::fs::read_to_string(path).unwrap_or_else(|_| DOTT_LOGO.to_string())
             } else {
                 DOTT_LOGO.to_string()
             }
         }
         config::LogoType::Image => {
-            // For image logos, show a placeholder message
-            // Note: Kitty image protocol doesn't work well within ratatui
-            // Images should be displayed before launching the TUI
-            if let Some(ref path) = app.config.image_logo_path {
+            if let Some(ref path) = config.image_logo_path {
                 format!("\n\n  [Image Logo: {}]\n  (Experimental: Use Kitty terminal)\n  (Image displayed before TUI launch)\n\n", path)
             } else {
                 DOTT_LOGO.to_string()
             }
         }
-    };
-
-    // Center the logo
-    let logo_lines: Vec<Line> = logo_text
-        .lines()
-        .map(|line| Line::from(Span::styled(line, Style::default().fg(Color::Cyan))))
-        .collect();
-
-    let logo_line_count = logo_lines.len();
-    let logo = Paragraph::new(logo_lines)
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Cyan));
-
-    f.render_widget(logo, vertical_chunks[1]);
-
-    // Calculate menu area (below logo)
-    let menu_area = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(logo_line_count as u16 + 2),
-            Constraint::Min(0),
-        ])
-        .split(vertical_chunks[1]);
-
-    // Create centered menu
-    let menu_width = 30;
-    let menu_horizontal = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Length((size.width.saturating_sub(menu_width)) / 2),
-            Constraint::Length(menu_width),
-            Constraint::Length((size.width.saturating_sub(menu_width)) / 2),
-        ])
-        .split(menu_area[1]);
-
-    let items: Vec<ListItem> = app
-        .config
-        .entries
-        .iter()
-        .enumerate()
-        .map(|(i, item)| {
-            let (prefix, style) = if i == app.selected {
-                (
-                    "> ",
-                    Style::default()
-                        .fg(Color::Black)
-                        .bg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD)
-                )
-            } else {
-                (
-                    "> ",
-                    Style::default().fg(Color::White)
-                )
-            };
-            ListItem::new(Line::from(Span::styled(format!("{}{}  ", prefix, item.name), style)))
-        })
-        .collect();
-
-    let list = List::new(items)
-        .block(Block::default())
-        .style(Style::default().fg(Color::White));
-
-    f.render_widget(list, menu_horizontal[1]);
-
-    // Display the command for the selected item
-    let selected_item = &app.config.entries[app.selected];
-    let command_text = if !selected_item.command.is_empty() {
-        if selected_item.args.is_empty() {
-            format!("Command: {}", selected_item.command)
-        } else {
-            format!("Command: {} {}", selected_item.command, selected_item.args.join(" "))
-        }
-    } else {
-        // Special cases for built-in commands
-        match selected_item.name.as_str() {
-            "View Shell" => {
-                if let Some(ref shell_config) = app.detected_shell_config {
-                    format!("Command: nvim {}", shell_config)
-                } else {
-                    "Command: nvim <shell config>".to_string()
-                }
-            },
-            "Edit Dott Config" => "Command: nvim ~/.config/dott/config.toml".to_string(),
-            "Quit" => "Command: exit".to_string(),
-            _ => String::new(),
-        }
-    };
-
-    if !command_text.is_empty() {
-        let command_display = Paragraph::new(command_text)
-            .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::DarkGray));
-        
-        // Position command display below the menu
-        let command_area = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(logo_line_count as u16 + app.config.entries.len() as u16 + 3),
-                Constraint::Min(0),
-            ])
-            .split(vertical_chunks[1]);
-        
-        let command_horizontal = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([
-                Constraint::Length((size.width.saturating_sub(menu_width + 20)) / 2),
-                Constraint::Length(menu_width + 20),
-                Constraint::Length((size.width.saturating_sub(menu_width + 20)) / 2),
-            ])
-            .split(command_area[1]);
-        
-        f.render_widget(command_display, command_horizontal[1]);
-    }
-
-    // Render terminal colors module if configured (after menu items)
-    if let Some(ref custom) = app.config.custom {
-        if custom.terminal_colors.is_some() {
-            let colors_area = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(logo_line_count as u16 + app.config.entries.len() as u16 + 4),
-                    Constraint::Min(0),
-                ])
-                .split(vertical_chunks[1]);
-            
-            render_terminal_colors(f, colors_area[1], &app.config);
-        }
-    }
-
-    // Help text at bottom
-    let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | u: Reload Config | q/Esc: Quit")
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::DarkGray));
-    f.render_widget(help, vertical_chunks[2]);
-
-    // Render clock directly under keybindings if configured
-    if let Some(ref custom) = app.config.custom {
-        if custom.clock.is_some() {
-            render_clock_under_keybindings(f, vertical_chunks[2]);
-        }
     }
 }
 
-fn render_clock_under_keybindings(f: &mut Frame, area: ratatui::layout::Rect) {
-    let time = Local::now().format("%H:%M:%S").to_string();
+fn render_terminal_colors_lines(colors_config: &config::TerminalColorsConfig) -> Vec<Line<'static>> {
+    let colors = vec![
+        Color::Black,
+        Color::Red,
+        Color::Green,
+        Color::Yellow,
+        Color::Blue,
+        Color::Magenta,
+        Color::Cyan,
+        Color::White,
+    ];
     
-    let clock_area = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(1),
-            Constraint::Length(1),
-            Constraint::Min(0),
-        ])
-        .split(area);
+    let mut lines = Vec::new();
     
-    let clock = Paragraph::new(time)
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Cyan));
-    
-    f.render_widget(clock, clock_area[1]);
-}
-
-fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &Config) {
-    if let Some(ref custom) = config.custom {
-        if let Some(ref colors_config) = custom.terminal_colors {
-            let colors = vec![
-                Color::Black,
-                Color::Red,
-                Color::Green,
-                Color::Yellow,
-                Color::Blue,
-                Color::Magenta,
-                Color::Cyan,
-                Color::White,
-            ];
-
-            match colors_config.shape {
-                config::ColorShape::Circles => {
-                    // 1 row of 8 circles
-                    let color_area = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints([
-                            Constraint::Length(1),
-                            Constraint::Min(0),
-                        ])
-                        .split(area);
-
-                    let mut spans = vec![];
-                    for color in &colors {
-                        spans.push(Span::styled("● ", Style::default().fg(*color)));
-                    }
-                    
-                    let line = Line::from(spans);
-                    let colors_display = Paragraph::new(line)
-                        .alignment(Alignment::Center);
-                    
-                    f.render_widget(colors_display, color_area[0]);
-                }
-                config::ColorShape::Squares => {
-                    // 2 rows with 4 squares each
-                    let color_area = Layout::default()
-                        .direction(Direction::Vertical)
-                        .constraints([
-                            Constraint::Length(2),
-                            Constraint::Min(0),
-                        ])
-                        .split(area);
-
-                    // First row
-                    let mut spans_row1 = vec![];
-                    for color in colors.iter().take(4) {
-                        spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
-                    }
-                    
-                    // Second row
-                    let mut spans_row2 = vec![];
-                    for color in colors.iter().skip(4).take(4) {
-                        spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
-                    }
-                    
-                    let lines = vec![Line::from(spans_row1), Line::from(spans_row2)];
-                    let colors_display = Paragraph::new(lines)
-                        .alignment(Alignment::Center);
-                    
-                    f.render_widget(colors_display, color_area[0]);
-                }
+    match colors_config.shape {
+        config::ColorShape::Circles => {
+            let mut spans = vec![];
+            for color in &colors {
+                spans.push(Span::styled("● ", Style::default().fg(*color)));
             }
+            lines.push(Line::from(spans));
+        }
+        config::ColorShape::Squares => {
+            // First row
+            let mut spans_row1 = vec![];
+            for color in colors.iter().take(4) {
+                spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
+            }
+            lines.push(Line::from(spans_row1));
+            
+            // Second row
+            let mut spans_row2 = vec![];
+            for color in colors.iter().skip(4).take(4) {
+                spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
+            }
+            lines.push(Line::from(spans_row2));
         }
     }
+    
+    lines
 }
+
+
