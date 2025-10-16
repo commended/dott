@@ -122,12 +122,14 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
-                KeyCode::Down | KeyCode::Char('j') => app.next(),
-                KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                KeyCode::Enter => {
+        // Poll for events with a timeout to update the clock
+        if event::poll(std::time::Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                match key.code {
+                    KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
+                    KeyCode::Down | KeyCode::Char('j') => app.next(),
+                    KeyCode::Up | KeyCode::Char('k') => app.previous(),
+                    KeyCode::Enter => {
                     let selected = app.get_selected_item();
                     
                     match selected.name.as_str() {
@@ -226,6 +228,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                 }
                 _ => {}
             }
+            }
         }
     }
 }
@@ -269,38 +272,14 @@ fn ui(f: &mut Frame, app: &App) {
 
     f.render_widget(logo, vertical_chunks[1]);
 
-    // Render clock at top if configured
-    let mut clock_offset = 0u16;
-    if let Some(ref clock_config) = app.config.clock {
-        if matches!(clock_config.position, config::ClockPosition::Top) {
-            clock_offset = render_clock_top(f, vertical_chunks[1]);
-        }
-    }
-
-    // Calculate menu area (below logo and optional clock)
+    // Calculate menu area (below logo)
     let menu_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(logo_line_count as u16 + 2 + clock_offset),
+            Constraint::Length(logo_line_count as u16 + 2),
             Constraint::Min(0),
         ])
         .split(vertical_chunks[1]);
-
-    // Render terminal colors module if configured
-    let colors_offset = if app.config.terminal_colors.is_some() {
-        render_terminal_colors(f, menu_area[1], &app.config)
-    } else {
-        0
-    };
-
-    // Calculate menu position after terminal colors
-    let final_menu_area = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(colors_offset),
-            Constraint::Min(0),
-        ])
-        .split(menu_area[1]);
 
     // Create centered menu
     let menu_width = 30;
@@ -311,7 +290,7 @@ fn ui(f: &mut Frame, app: &App) {
             Constraint::Length(menu_width),
             Constraint::Length((size.width.saturating_sub(menu_width)) / 2),
         ])
-        .split(final_menu_area[1]);
+        .split(menu_area[1]);
 
     let items: Vec<ListItem> = app
         .config
@@ -376,7 +355,7 @@ fn ui(f: &mut Frame, app: &App) {
         let command_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3 + clock_offset + colors_offset),
+                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3),
                 Constraint::Min(0),
             ])
             .split(vertical_chunks[1]);
@@ -393,11 +372,17 @@ fn ui(f: &mut Frame, app: &App) {
         f.render_widget(command_display, command_horizontal[1]);
     }
 
-    // Render clock at bottom if configured (above help text)
-    if let Some(ref clock_config) = app.config.clock {
-        if matches!(clock_config.position, config::ClockPosition::Bottom) {
-            render_clock_bottom(f, vertical_chunks[2]);
-        }
+    // Render terminal colors module if configured (after menu items)
+    if app.config.terminal_colors.is_some() {
+        let colors_area = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 4),
+                Constraint::Min(0),
+            ])
+            .split(vertical_chunks[1]);
+        
+        render_terminal_colors(f, colors_area[1], &app.config);
     }
 
     // Help text at bottom
@@ -405,36 +390,22 @@ fn ui(f: &mut Frame, app: &App) {
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(help, vertical_chunks[2]);
+
+    // Render clock directly under keybindings if configured
+    if app.config.clock.is_some() {
+        render_clock_under_keybindings(f, vertical_chunks[2]);
+    }
 }
 
-fn render_clock_top(f: &mut Frame, area: ratatui::layout::Rect) -> u16 {
+fn render_clock_under_keybindings(f: &mut Frame, area: ratatui::layout::Rect) {
     let time = Local::now().format("%H:%M:%S").to_string();
     
     let clock_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(2),
-            Constraint::Min(0),
-        ])
-        .split(area);
-    
-    let clock = Paragraph::new(time)
-        .alignment(Alignment::Center)
-        .style(Style::default().fg(Color::Cyan));
-    
-    f.render_widget(clock, clock_area[0]);
-    2
-}
-
-fn render_clock_bottom(f: &mut Frame, area: ratatui::layout::Rect) {
-    let time = Local::now().format("%H:%M:%S").to_string();
-    
-    let clock_area = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Min(0),
             Constraint::Length(1),
             Constraint::Length(1),
+            Constraint::Min(0),
         ])
         .split(area);
     
@@ -445,7 +416,7 @@ fn render_clock_bottom(f: &mut Frame, area: ratatui::layout::Rect) {
     f.render_widget(clock, clock_area[1]);
 }
 
-fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &Config) -> u16 {
+fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &Config) {
     if let Some(ref colors_config) = config.terminal_colors {
         let colors = vec![
             Color::Black,
@@ -464,7 +435,7 @@ fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &C
                 let color_area = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
-                        Constraint::Length(2),
+                        Constraint::Length(1),
                         Constraint::Min(0),
                     ])
                     .split(area);
@@ -479,14 +450,13 @@ fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &C
                     .alignment(Alignment::Center);
                 
                 f.render_widget(colors_display, color_area[0]);
-                2
             }
             config::ColorShape::Squares => {
                 // 2 rows with 4 squares each
                 let color_area = Layout::default()
                     .direction(Direction::Vertical)
                     .constraints([
-                        Constraint::Length(3),
+                        Constraint::Length(2),
                         Constraint::Min(0),
                     ])
                     .split(area);
@@ -508,10 +478,7 @@ fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &C
                     .alignment(Alignment::Center);
                 
                 f.render_widget(colors_display, color_area[0]);
-                3
             }
         }
-    } else {
-        0
     }
 }
