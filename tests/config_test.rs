@@ -307,3 +307,131 @@ args = []
     assert_eq!(config["structure"]["font"].as_str().unwrap(), "JetBrains Mono");
 }
 
+#[test]
+fn test_sysinfo_module_config() {
+    // Test that sysinfo module can be configured with options
+    let config_content = r#"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "sysinfo"
+
+[[structure.build]]
+module = "entries"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+
+[custom]
+
+[custom.sysinfo]
+os = true
+wm = true
+cpu = true
+gpu = false
+memory = true
+uptime = false
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify sysinfo module is in structure build
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build[1]["module"].as_str().unwrap(), "sysinfo");
+    
+    // Verify custom.sysinfo section exists
+    assert!(config.get("custom").is_some());
+    assert!(config["custom"].get("sysinfo").is_some());
+    
+    // Verify individual options
+    let sysinfo = &config["custom"]["sysinfo"];
+    assert_eq!(sysinfo["os"].as_bool().unwrap(), true);
+    assert_eq!(sysinfo["wm"].as_bool().unwrap(), true);
+    assert_eq!(sysinfo["cpu"].as_bool().unwrap(), true);
+    assert_eq!(sysinfo["gpu"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["memory"].as_bool().unwrap(), true);
+    assert_eq!(sysinfo["uptime"].as_bool().unwrap(), false);
+}
+
+#[test]
+fn test_sysinfo_all_options_disabled() {
+    // Test that sysinfo can have all options disabled (module won't show)
+    let config_content = r#"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "sysinfo"
+
+[[structure.build]]
+module = "entries"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+
+[custom]
+
+[custom.sysinfo]
+os = false
+wm = false
+cpu = false
+gpu = false
+memory = false
+uptime = false
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify all options are disabled
+    let sysinfo = &config["custom"]["sysinfo"];
+    assert_eq!(sysinfo["os"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["wm"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["cpu"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["gpu"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["memory"].as_bool().unwrap(), false);
+    assert_eq!(sysinfo["uptime"].as_bool().unwrap(), false);
+}
+
+#[test]
+fn test_sysinfo_example_config_parses() {
+    let example_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join("config-sysinfo.toml");
+    
+    let content = fs::read_to_string(&example_path)
+        .expect("Failed to read example sysinfo config");
+    
+    let config: toml::Value = toml::from_str(&content)
+        .expect("Failed to parse example sysinfo config");
+    
+    // Verify it has the expected structure
+    assert!(config.get("structure").is_some());
+    assert!(config.get("entries").is_some());
+    assert!(config.get("custom").is_some());
+    assert!(config["custom"].get("sysinfo").is_some());
+    
+    // Verify all sysinfo options are present
+    let sysinfo = &config["custom"]["sysinfo"];
+    assert!(sysinfo.get("os").is_some());
+    assert!(sysinfo.get("wm").is_some());
+    assert!(sysinfo.get("cpu").is_some());
+    assert!(sysinfo.get("gpu").is_some());
+    assert!(sysinfo.get("memory").is_some());
+    assert!(sysinfo.get("uptime").is_some());
+}
+

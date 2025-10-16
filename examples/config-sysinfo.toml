@@ -1,0 +1,49 @@
+# Example configuration with sysinfo module
+
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "sysinfo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+logo_type = "default"
+
+# Entries
+[[entries]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries]]
+name = "Quit"
+command = ""
+args = []
+
+# Custom modules configuration
+[custom]
+
+# SysInfo module - displays system information
+# At least one option must be enabled for the module to show
+[custom.sysinfo]
+os = true       # Show OS name with  icon
+wm = true       # Show WM/DE with  icon  
+cpu = true      # Show CPU with  icon
+gpu = true      # Show GPU with 󰍛 icon
+memory = true   # Show memory usage (used/total %) with  icon
+uptime = true   # Show system uptime with  icon
+
+[custom.break]
+lines = 2

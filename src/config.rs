@@ -50,6 +50,7 @@ pub enum ModuleType {
     Help,
     Break,
     Selected,
+    SysInfo,
     Quit,
 }
 
@@ -111,6 +112,9 @@ pub struct CustomModules {
     
     #[serde(default)]
     pub selected: SelectedConfig,
+    
+    #[serde(default)]
+    pub sysinfo: SysInfoConfig,
 }
 
 fn default_terminal_colors() -> TerminalColorsConfig {
@@ -217,6 +221,35 @@ pub struct SelectedConfig {
     // This module will display the command for the currently selected entry
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SysInfoConfig {
+    #[serde(default)]
+    pub os: bool,
+    #[serde(default)]
+    pub wm: bool,
+    #[serde(default)]
+    pub cpu: bool,
+    #[serde(default)]
+    pub gpu: bool,
+    #[serde(default)]
+    pub memory: bool,
+    #[serde(default)]
+    pub uptime: bool,
+}
+
+impl Default for SysInfoConfig {
+    fn default() -> Self {
+        SysInfoConfig {
+            os: false,
+            wm: false,
+            cpu: false,
+            gpu: false,
+            memory: false,
+            uptime: false,
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -285,6 +318,7 @@ impl Config {
                     "help" => Some(ModuleType::Help),
                     "break" => Some(ModuleType::Break),
                     "selected" => Some(ModuleType::Selected),
+                    "sysinfo" => Some(ModuleType::SysInfo),
                     "quit" => Some(ModuleType::Quit),
                     _ => None,
                 }
@@ -307,6 +341,15 @@ impl Config {
             return custom.break_.lines;
         }
         2 // Default to 2 lines
+    }
+    
+    /// Check if sysinfo should be displayed (at least one option enabled)
+    pub fn should_display_sysinfo(&self) -> bool {
+        if let Some(ref custom) = self.custom {
+            return custom.sysinfo.os || custom.sysinfo.wm || custom.sysinfo.cpu 
+                || custom.sysinfo.gpu || custom.sysinfo.memory || custom.sysinfo.uptime;
+        }
+        false
     }
 }
 

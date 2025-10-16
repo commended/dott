@@ -17,6 +17,7 @@ use ratatui::{
 use std::io;
 use chrono::Local;
 use std::io::Write;
+use sysinfo::System;
 
 const DOTT_LOGO: &str = r#"
     ;'*¨'`·- .,  ‘                   , ·. ,.-·~·.,   ‘             ,  . .,  °             ,  . .,  °    
@@ -118,6 +119,112 @@ fn detect_shell_config() -> Option<String> {
     };
     
     Some(config_file.to_string())
+}
+
+/// Get OS information (no version, just name)
+fn get_os_info() -> String {
+    let os_name = System::name().unwrap_or_else(|| "Unknown".to_string());
+    // Remove version numbers and extra info, keep just the base name
+    os_name.split_whitespace().next().unwrap_or("Unknown").to_string()
+}
+
+/// Get WM/DE information
+fn get_wm_de_info() -> String {
+    // Try to detect window manager or desktop environment
+    if let Ok(desktop) = std::env::var("XDG_CURRENT_DESKTOP") {
+        return desktop.split(':').next().unwrap_or("Unknown").to_string();
+    }
+    if let Ok(desktop) = std::env::var("DESKTOP_SESSION") {
+        return desktop;
+    }
+    if let Ok(wm) = std::env::var("WINDOWMANAGER") {
+        return wm.split('/').last().unwrap_or("Unknown").to_string();
+    }
+    "Unknown".to_string()
+}
+
+/// Get CPU information (no version/generation, just model)
+fn get_cpu_info() -> String {
+    let sys = System::new_all();
+    if let Some(cpu) = sys.cpus().first() {
+        let brand = cpu.brand();
+        // Extract just the base CPU name without detailed specs
+        // E.g., "Intel Core i7" from "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz"
+        let parts: Vec<&str> = brand.split_whitespace().collect();
+        let mut result = Vec::new();
+        for part in parts {
+            if part.contains("@") || part.starts_with("CPU") {
+                break;
+            }
+            if !part.contains("(R)") && !part.contains("(TM)") {
+                let clean = part.replace("(R)", "").replace("(TM)", "");
+                if !clean.is_empty() {
+                    result.push(clean);
+                }
+            }
+        }
+        let cpu_name = result.join(" ");
+        // Remove generation numbers (e.g., i7-9750H -> i7)
+        cpu_name.split('-').next().unwrap_or("Unknown").to_string()
+    } else {
+        "Unknown".to_string()
+    }
+}
+
+/// Get GPU information (basic, no version)
+fn get_gpu_info() -> String {
+    // Try to get GPU info from common Linux paths
+    if let Ok(content) = std::fs::read_to_string("/sys/class/drm/card0/device/uevent") {
+        for line in content.lines() {
+            if line.starts_with("PCI_ID=") {
+                // Basic fallback
+                return "GPU".to_string();
+            }
+        }
+    }
+    
+    // Try lspci if available
+    if let Ok(output) = std::process::Command::new("lspci").output() {
+        if let Ok(stdout) = String::from_utf8(output.stdout) {
+            for line in stdout.lines() {
+                if line.contains("VGA") || line.contains("3D") {
+                    // Extract just the vendor and basic model
+                    if let Some(info) = line.split(':').nth(2) {
+                        let parts: Vec<&str> = info.trim().split_whitespace().collect();
+                        // Get first 2-3 words (vendor and basic model)
+                        let gpu_name = parts.iter().take(3).map(|s| *s).collect::<Vec<&str>>().join(" ");
+                        // Remove version numbers and detailed specs
+                        return gpu_name.split('[').next().unwrap_or("GPU").trim().to_string();
+                    }
+                }
+            }
+        }
+    }
+    
+    "Unknown".to_string()
+}
+
+/// Get memory usage (used/total percentage)
+fn get_memory_info() -> String {
+    let mut sys = System::new_all();
+    sys.refresh_memory();
+    let total = sys.total_memory() as f64 / (1024.0 * 1024.0 * 1024.0); // Convert to GB
+    let used = sys.used_memory() as f64 / (1024.0 * 1024.0 * 1024.0); // Convert to GB
+    let percentage = (used / total * 100.0) as u32;
+    format!("{:.1}GB/{:.1}GB {}%", used, total, percentage)
+}
+
+/// Get system uptime
+fn get_uptime_info() -> String {
+    let uptime_seconds = System::uptime();
+    let hours = uptime_seconds / 3600;
+    let minutes = (uptime_seconds % 3600) / 60;
+    
+    if hours > 0 {
+        format!("{}h {}m", hours, minutes)
+    } else {
+        format!("{}m", minutes)
+    }
 }
 
 struct App {
@@ -429,7 +536,7 @@ fn ui(f: &mut Frame, app: &App) {
                 }
             }
             config::ModuleType::Clock => {
-                if let Some(ref custom) = app.config.custom {
+                if app.config.custom.is_some() {
                     let time = Local::now().format("%H:%M:%S").to_string();
                     lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
                 }
@@ -441,7 +548,7 @@ fn ui(f: &mut Frame, app: &App) {
                 )));
             }
             config::ModuleType::Selected => {
-                if let Some(ref custom) = app.config.custom {
+                if app.config.custom.is_some() {
                     if let Some(selected_entry) = app.get_selected_item() {
                         let command_text = if selected_entry.command.is_empty() {
                             // Handle special entries that don't have commands
@@ -470,6 +577,62 @@ fn ui(f: &mut Frame, app: &App) {
                 let break_lines = app.config.get_break_lines();
                 for _ in 0..break_lines {
                     lines.push(Line::from(""));
+                }
+            }
+            config::ModuleType::SysInfo => {
+                // Only display if at least one option is enabled
+                if app.config.should_display_sysinfo() {
+                    if let Some(ref custom) = app.config.custom {
+                        let sysinfo = &custom.sysinfo;
+                        
+                        if sysinfo.os {
+                            let os = get_os_info();
+                            lines.push(Line::from(vec![
+                                Span::styled(" ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", os), Style::default().fg(Color::White))
+                            ]));
+                        }
+                        
+                        if sysinfo.wm {
+                            let wm = get_wm_de_info();
+                            lines.push(Line::from(vec![
+                                Span::styled(" ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", wm), Style::default().fg(Color::White))
+                            ]));
+                        }
+                        
+                        if sysinfo.cpu {
+                            let cpu = get_cpu_info();
+                            lines.push(Line::from(vec![
+                                Span::styled(" ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", cpu), Style::default().fg(Color::White))
+                            ]));
+                        }
+                        
+                        if sysinfo.gpu {
+                            let gpu = get_gpu_info();
+                            lines.push(Line::from(vec![
+                                Span::styled("󰍛 ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", gpu), Style::default().fg(Color::White))
+                            ]));
+                        }
+                        
+                        if sysinfo.memory {
+                            let memory = get_memory_info();
+                            lines.push(Line::from(vec![
+                                Span::styled(" ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", memory), Style::default().fg(Color::White))
+                            ]));
+                        }
+                        
+                        if sysinfo.uptime {
+                            let uptime = get_uptime_info();
+                            lines.push(Line::from(vec![
+                                Span::styled(" ", Style::default().fg(Color::Cyan)),
+                                Span::styled(format!(" {}", uptime), Style::default().fg(Color::White))
+                            ]));
+                        }
+                    }
                 }
             }
             config::ModuleType::Quit => {
