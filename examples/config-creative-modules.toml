@@ -89,10 +89,6 @@ lines = 2
 [custom.disk_usage]
 path = "/"
 
-[custom.weather]
-location = "New York"
-units = "metric"
-
 [custom.quote]
 quotes = [
     "The only way to do great work is to love what you do. - Steve Jobs",
