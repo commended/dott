@@ -86,6 +86,44 @@ command = "htop"
 args = []
 ```
 
+### Optional Modules
+
+#### Terminal Colors Module
+
+Display a row of terminal colors to showcase your color scheme. The module can be configured with two different shapes:
+
+**Circles** (1 row of 8 color entries):
+```toml
+[terminal_colors]
+shape = "circles"
+```
+
+**Squares** (2 rows with 4 horizontal entries):
+```toml
+[terminal_colors]
+shape = "squares"
+```
+
+#### 24-Hour Clock Module
+
+Display a minimal clock showing the current time in 24-hour format. The clock position can be configured:
+
+**Bottom** (above the help text):
+```toml
+[clock]
+position = "bottom"
+```
+
+**Top** (below the logo, before modules start):
+```toml
+[clock]
+position = "top"
+```
+
+**Note:** The clock ignores the normal module ordering and always displays in its configured position (top or bottom).
+
+See `examples/config-with-modules.toml` and `examples/config-with-modules-alt.toml` for complete examples.
+
 
 ## Requirements
 

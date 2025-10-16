@@ -1,0 +1,34 @@
+# Dott Configuration Example with Terminal Colors (Squares) and Clock (Top)
+# This file demonstrates the optional modules with alternate configurations
+
+# Logo type: "default" or "custom"
+logo_type = "default"
+
+# Menu items - each item can have a name, command, and arguments
+[[menu_items]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[menu_items]]
+name = "Edit Dott Config"
+command = ""
+args = []
+
+[[menu_items]]
+name = "View Shell"
+command = ""
+args = []
+
+[[menu_items]]
+name = "Quit"
+command = ""
+args = []
+
+# Terminal colors module with square grid (2 rows, 4 entries each)
+[terminal_colors]
+shape = "squares"
+
+# Clock module positioned at top (below logo, before modules)
+[clock]
+position = "top"

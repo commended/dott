@@ -16,6 +16,7 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::io;
+use chrono::Local;
 
 const DOTT_LOGO: &str = r#"
       _       _   _   
@@ -268,14 +269,38 @@ fn ui(f: &mut Frame, app: &App) {
 
     f.render_widget(logo, vertical_chunks[1]);
 
-    // Calculate menu area (below logo)
+    // Render clock at top if configured
+    let mut clock_offset = 0u16;
+    if let Some(ref clock_config) = app.config.clock {
+        if matches!(clock_config.position, config::ClockPosition::Top) {
+            clock_offset = render_clock_top(f, vertical_chunks[1]);
+        }
+    }
+
+    // Calculate menu area (below logo and optional clock)
     let menu_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(logo_line_count as u16 + 2),
+            Constraint::Length(logo_line_count as u16 + 2 + clock_offset),
             Constraint::Min(0),
         ])
         .split(vertical_chunks[1]);
+
+    // Render terminal colors module if configured
+    let colors_offset = if app.config.terminal_colors.is_some() {
+        render_terminal_colors(f, menu_area[1], &app.config)
+    } else {
+        0
+    };
+
+    // Calculate menu position after terminal colors
+    let final_menu_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(colors_offset),
+            Constraint::Min(0),
+        ])
+        .split(menu_area[1]);
 
     // Create centered menu
     let menu_width = 30;
@@ -286,7 +311,7 @@ fn ui(f: &mut Frame, app: &App) {
             Constraint::Length(menu_width),
             Constraint::Length((size.width.saturating_sub(menu_width)) / 2),
         ])
-        .split(menu_area[1]);
+        .split(final_menu_area[1]);
 
     let items: Vec<ListItem> = app
         .config
@@ -351,7 +376,7 @@ fn ui(f: &mut Frame, app: &App) {
         let command_area = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3),
+                Constraint::Length(logo_line_count as u16 + app.config.menu_items.len() as u16 + 3 + clock_offset + colors_offset),
                 Constraint::Min(0),
             ])
             .split(vertical_chunks[1]);
@@ -368,9 +393,125 @@ fn ui(f: &mut Frame, app: &App) {
         f.render_widget(command_display, command_horizontal[1]);
     }
 
+    // Render clock at bottom if configured (above help text)
+    if let Some(ref clock_config) = app.config.clock {
+        if matches!(clock_config.position, config::ClockPosition::Bottom) {
+            render_clock_bottom(f, vertical_chunks[2]);
+        }
+    }
+
     // Help text at bottom
     let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | q/Esc: Quit")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(help, vertical_chunks[2]);
+}
+
+fn render_clock_top(f: &mut Frame, area: ratatui::layout::Rect) -> u16 {
+    let time = Local::now().format("%H:%M:%S").to_string();
+    
+    let clock_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2),
+            Constraint::Min(0),
+        ])
+        .split(area);
+    
+    let clock = Paragraph::new(time)
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Cyan));
+    
+    f.render_widget(clock, clock_area[0]);
+    2
+}
+
+fn render_clock_bottom(f: &mut Frame, area: ratatui::layout::Rect) {
+    let time = Local::now().format("%H:%M:%S").to_string();
+    
+    let clock_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(0),
+            Constraint::Length(1),
+            Constraint::Length(1),
+        ])
+        .split(area);
+    
+    let clock = Paragraph::new(time)
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Cyan));
+    
+    f.render_widget(clock, clock_area[1]);
+}
+
+fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &Config) -> u16 {
+    if let Some(ref colors_config) = config.terminal_colors {
+        let colors = vec![
+            Color::Black,
+            Color::Red,
+            Color::Green,
+            Color::Yellow,
+            Color::Blue,
+            Color::Magenta,
+            Color::Cyan,
+            Color::White,
+        ];
+
+        match colors_config.shape {
+            config::ColorShape::Circles => {
+                // 1 row of 8 circles
+                let color_area = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(2),
+                        Constraint::Min(0),
+                    ])
+                    .split(area);
+
+                let mut spans = vec![];
+                for color in &colors {
+                    spans.push(Span::styled("● ", Style::default().fg(*color)));
+                }
+                
+                let line = Line::from(spans);
+                let colors_display = Paragraph::new(line)
+                    .alignment(Alignment::Center);
+                
+                f.render_widget(colors_display, color_area[0]);
+                2
+            }
+            config::ColorShape::Squares => {
+                // 2 rows with 4 squares each
+                let color_area = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints([
+                        Constraint::Length(3),
+                        Constraint::Min(0),
+                    ])
+                    .split(area);
+
+                // First row
+                let mut spans_row1 = vec![];
+                for i in 0..4 {
+                    spans_row1.push(Span::styled("■ ", Style::default().fg(colors[i])));
+                }
+                
+                // Second row
+                let mut spans_row2 = vec![];
+                for i in 4..8 {
+                    spans_row2.push(Span::styled("■ ", Style::default().fg(colors[i])));
+                }
+                
+                let lines = vec![Line::from(spans_row1), Line::from(spans_row2)];
+                let colors_display = Paragraph::new(lines)
+                    .alignment(Alignment::Center);
+                
+                f.render_widget(colors_display, color_area[0]);
+                3
+            }
+        }
+    } else {
+        0
+    }
 }

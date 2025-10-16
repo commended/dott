@@ -12,6 +12,12 @@ pub struct Config {
     
     #[serde(default = "default_menu_items")]
     pub menu_items: Vec<MenuItem>,
+
+    #[serde(default)]
+    pub terminal_colors: Option<TerminalColorsConfig>,
+
+    #[serde(default)]
+    pub clock: Option<ClockConfig>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,12 +68,48 @@ pub struct MenuItem {
     pub args: Vec<String>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TerminalColorsConfig {
+    #[serde(default = "default_color_shape")]
+    pub shape: ColorShape,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum ColorShape {
+    Circles,
+    Squares,
+}
+
+fn default_color_shape() -> ColorShape {
+    ColorShape::Circles
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ClockConfig {
+    #[serde(default = "default_clock_position")]
+    pub position: ClockPosition,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum ClockPosition {
+    Top,
+    Bottom,
+}
+
+fn default_clock_position() -> ClockPosition {
+    ClockPosition::Bottom
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
             logo_type: default_logo_type(),
             custom_logo_path: default_logo_path(),
             menu_items: default_menu_items(),
+            terminal_colors: None,
+            clock: None,
         }
     }
 }
