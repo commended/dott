@@ -49,6 +49,7 @@ pub enum ModuleType {
     Clock,
     Help,
     Break,
+    Selected,
     Quit,
 }
 
@@ -59,6 +60,9 @@ pub struct Structure {
     
     #[serde(default = "default_build")]
     pub build: Vec<StructureBuildItem>,
+    
+    #[serde(default)]
+    pub font: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,6 +94,7 @@ fn default_structure() -> Structure {
     Structure {
         position: default_position(),
         build: default_build(),
+        font: None,
     }
 }
 
@@ -103,6 +108,9 @@ pub struct CustomModules {
 
     #[serde(default = "default_break_config")]
     pub break_: BreakConfig,
+    
+    #[serde(default)]
+    pub selected: SelectedConfig,
 }
 
 fn default_terminal_colors() -> TerminalColorsConfig {
@@ -203,6 +211,12 @@ fn default_break_lines() -> usize {
     2
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct SelectedConfig {
+    // No configurable settings for now
+    // This module will display the command for the currently selected entry
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -270,6 +284,7 @@ impl Config {
                     "clock" => Some(ModuleType::Clock),
                     "help" => Some(ModuleType::Help),
                     "break" => Some(ModuleType::Break),
+                    "selected" => Some(ModuleType::Selected),
                     "quit" => Some(ModuleType::Quit),
                     _ => None,
                 }

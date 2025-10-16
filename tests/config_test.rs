@@ -236,3 +236,74 @@ lines = 2
     assert!(custom.get("clock").is_some());
     assert!(custom.get("break").is_some());
 }
+
+#[test]
+fn test_selected_module() {
+    // Test that selected module can be configured
+    let config_content = r#"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "selected"
+
+[[structure.build]]
+module = "help"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test Command"
+command = "echo"
+args = ["hello"]
+
+[custom]
+
+[custom.selected]
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify selected module is in structure build
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build[2]["module"].as_str().unwrap(), "selected");
+    
+    // Verify custom.selected section exists
+    assert!(config.get("custom").is_some());
+    assert!(config["custom"].get("selected").is_some());
+}
+
+#[test]
+fn test_structure_font_option() {
+    // Test that font option can be set in structure
+    let config_content = r#"
+[structure]
+position = "center"
+font = "JetBrains Mono"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "entries"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify font option in structure
+    assert_eq!(config["structure"]["font"].as_str().unwrap(), "JetBrains Mono");
+}
+
