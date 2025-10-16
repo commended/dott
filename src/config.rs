@@ -1,9 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
+    #[serde(default = "default_structure")]
+    pub structure: Structure,
+
     #[serde(default = "default_logo_type")]
     pub logo_type: LogoType,
     
@@ -13,9 +17,53 @@ pub struct Config {
     #[serde(default = "default_image_path")]
     pub image_logo_path: Option<String>,
     
-    #[serde(default = "default_menu_items")]
-    pub menu_items: Vec<MenuItem>,
+    #[serde(default = "default_entries")]
+    pub entries: Vec<MenuItem>,
 
+    #[serde(default)]
+    pub custom: Option<CustomModules>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Structure {
+    #[serde(default = "default_position")]
+    pub position: Position,
+    
+    #[serde(default = "default_build")]
+    pub build: BTreeMap<u32, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum Position {
+    Center,
+    Left,
+    Right,
+}
+
+fn default_position() -> Position {
+    Position::Center
+}
+
+fn default_build() -> BTreeMap<u32, String> {
+    let mut build = BTreeMap::new();
+    build.insert(1, "logo".to_string());
+    build.insert(2, "entries".to_string());
+    build.insert(3, "colors".to_string());
+    build.insert(4, "clock".to_string());
+    build.insert(5, "help".to_string());
+    build
+}
+
+fn default_structure() -> Structure {
+    Structure {
+        position: default_position(),
+        build: default_build(),
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CustomModules {
     #[serde(default)]
     pub terminal_colors: Option<TerminalColorsConfig>,
 
@@ -43,7 +91,7 @@ fn default_image_path() -> Option<String> {
     None
 }
 
-fn default_menu_items() -> Vec<MenuItem> {
+fn default_entries() -> Vec<MenuItem> {
     vec![
         MenuItem {
             name: "View Dotfiles".to_string(),
@@ -95,30 +143,19 @@ fn default_color_shape() -> ColorShape {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClockConfig {
-    #[serde(default = "default_clock_position")]
-    pub position: ClockPosition,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum ClockPosition {
-    Top,
-    Bottom,
-}
-
-fn default_clock_position() -> ClockPosition {
-    ClockPosition::Bottom
+    // Position is now determined by structure.build order
+    // No position field needed
 }
 
 impl Default for Config {
     fn default() -> Self {
         Config {
+            structure: default_structure(),
             logo_type: default_logo_type(),
             custom_logo_path: default_logo_path(),
             image_logo_path: default_image_path(),
-            menu_items: default_menu_items(),
-            terminal_colors: None,
-            clock: None,
+            entries: default_entries(),
+            custom: None,
         }
     }
 }
