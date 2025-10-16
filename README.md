@@ -90,7 +90,7 @@ args = []
 
 #### Terminal Colors Module
 
-Display a row of terminal colors to showcase your color scheme. The module can be configured with two different shapes:
+Display a row of terminal colors to showcase your color scheme. The colors are displayed below the menu items. The module can be configured with two different shapes:
 
 **Circles** (1 row of 8 color entries):
 ```toml
@@ -106,21 +106,15 @@ shape = "squares"
 
 #### 24-Hour Clock Module
 
-Display a minimal clock showing the current time in 24-hour format. The clock position can be configured:
+Display a minimal clock showing the current time in 24-hour format. The clock is displayed directly under the keybindings (help text) at the bottom of the screen and updates every second.
 
-**Bottom** (above the help text):
+To enable the clock module:
 ```toml
 [clock]
 position = "bottom"
 ```
 
-**Top** (below the logo, before modules start):
-```toml
-[clock]
-position = "top"
-```
-
-**Note:** The clock ignores the normal module ordering and always displays in its configured position (top or bottom).
+**Note:** The `position` field is kept for backwards compatibility but is now ignored. The clock is always displayed under the keybindings at the bottom.
 
 See `examples/config-with-modules.toml` and `examples/config-with-modules-alt.toml` for complete examples.
 
