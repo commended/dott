@@ -187,3 +187,52 @@ args = []
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build[0]["module"].as_str().unwrap(), "logo:custom");
 }
+
+#[test]
+fn test_custom_modules_required() {
+    // Test that custom modules section is present and has all required fields
+    let config_content = r#"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "entries"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
+
+[custom.break]
+lines = 2
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify custom section exists
+    assert!(config.get("custom").is_some());
+    
+    // Verify all custom modules are present
+    let custom = &config["custom"];
+    assert!(custom.get("terminal_colors").is_some());
+    assert!(custom.get("clock").is_some());
+    assert!(custom.get("break").is_some());
+}
