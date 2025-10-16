@@ -211,7 +211,74 @@ When "System Monitor" is highlighted, the selected module will display: `Selecte
 
 **Note**: The selected module must be declared in `[custom.selected]` even though it has no configurable settings. Its position is determined by where "selected" appears in your `structure.build` order.
 
-### 8. Quit
+### 8. SysInfo
+**Location in structure.build**: `module = "sysinfo"`
+**Configuration**: `[custom.sysinfo]`
+**Description**: Displays system information including OS, window manager/desktop environment, CPU, GPU, memory usage, and uptime. The module only displays if at least one option is enabled.
+
+**Configuration Options**:
+```toml
+[custom]
+
+[custom.sysinfo]
+os = true       # Show OS name with  icon
+wm = true       # Show WM/DE with  icon  
+cpu = true      # Show CPU with  icon
+gpu = true      # Show GPU with 󰍛 icon
+memory = true   # Show memory usage (used/total %) with  icon
+uptime = true   # Show system uptime with  icon
+```
+
+**Display Format**:
+-  OS: Shows operating system name without version
+-  WM/DE: Shows window manager or desktop environment
+-  CPU: Shows CPU model without detailed specs or generation numbers
+- 󰍛 GPU: Shows GPU vendor and basic model
+-  Memory: Shows used/total in GB and percentage (e.g., "8.5GB/16.0GB 53%")
+-  Uptime: Shows system uptime in hours and minutes (e.g., "5h 32m")
+
+**Example**:
+```toml
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "sysinfo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "help"
+
+[[entries]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[custom]
+
+[custom.sysinfo]
+os = true
+wm = true
+cpu = true
+gpu = true
+memory = true
+uptime = true
+
+[custom.break]
+lines = 2
+```
+
+**Note**: The sysinfo module must be declared in `[custom.sysinfo]` with at least one option set to `true` for the module to display anything. If all options are `false` or if no options are enabled, the module will not appear in the UI. Its position is determined by where "sysinfo" appears in your `structure.build` order.
+
+### 9. Quit
 **Location in structure.build**: `module = "quit"`
 **Configuration**: Not configurable
 **Description**: Exits the application immediately when encountered. This is different from the "Quit" entry which is a menu item the user can select. This module type would immediately quit when the structure is rendered, so it's typically not used in practice.
@@ -227,6 +294,9 @@ font = "JetBrains Mono"  # Optional: specify a custom font (default is terminal 
 
 [[structure.build]]
 module = "logo"
+
+[[structure.build]]
+module = "sysinfo"
 
 [[structure.build]]
 module = "entries"
@@ -328,6 +398,14 @@ shape = "circles"
 
 [custom.selected]
 
+[custom.sysinfo]
+os = true
+wm = true
+cpu = true
+gpu = true
+memory = true
+uptime = true
+
 [custom.break]
 lines = 2
 ```
@@ -407,6 +485,9 @@ font = "JetBrains Mono"  # Optional: specify a custom font
 module = "logo"
 
 [[structure.build]]
+module = "sysinfo"
+
+[[structure.build]]
 module = "entries"
 
 [[structure.build]]
@@ -443,6 +524,14 @@ shape = "circles"
 [custom.clock]
 
 [custom.selected]
+
+[custom.sysinfo]
+os = true
+wm = true
+cpu = true
+gpu = true
+memory = true
+uptime = true
 
 [custom.break]
 lines = 2
@@ -519,6 +608,8 @@ If you have an old config file, here are the changes:
    - Always declare `[custom.clock]` even if it has no settings
    - Always declare `[custom.terminal_colors]` even if using defaults
    - Always declare `[custom.break]` if using breaks
+   - Always declare `[custom.selected]` if using selected module
+   - Always declare `[custom.sysinfo]` if using sysinfo module (at least one option must be true)
 
 4. **Remove clock position setting**:
    - Remove `position = "bottom"` from clock config
