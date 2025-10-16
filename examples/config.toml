@@ -1,13 +1,5 @@
-# Dott Configuration Example
-# This file demonstrates the various configuration options available
+logo_type = "default"
 
-# Logo type: "default" or "custom"
-logo_type = "custom"
-
-# Path to custom logo file (only used when logo_type = "custom")
-custom_logo_path = "/home/runner/.config/dott/custom-logo.txt"
-
-# Menu items - each item can have a name, command, and arguments
 [[menu_items]]
 name = "View Dotfiles"
 command = "yazi"
@@ -37,11 +29,6 @@ args = []
 name = "Configure Dott"
 command = "nvim"
 args = ["~/.config/dott/config.toml"]
-
-[[menu_items]]
-name = "About"
-command = ""
-args = []
 
 [[menu_items]]
 name = "Quit"
