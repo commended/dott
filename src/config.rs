@@ -9,6 +9,9 @@ pub struct Config {
     
     #[serde(default = "default_logo_path")]
     pub custom_logo_path: Option<String>,
+
+    #[serde(default = "default_image_path")]
+    pub image_logo_path: Option<String>,
     
     #[serde(default = "default_menu_items")]
     pub menu_items: Vec<MenuItem>,
@@ -25,6 +28,7 @@ pub struct Config {
 pub enum LogoType {
     Default,
     Custom,
+    Image,
 }
 
 fn default_logo_type() -> LogoType {
@@ -32,6 +36,10 @@ fn default_logo_type() -> LogoType {
 }
 
 fn default_logo_path() -> Option<String> {
+    None
+}
+
+fn default_image_path() -> Option<String> {
     None
 }
 
@@ -107,6 +115,7 @@ impl Default for Config {
         Config {
             logo_type: default_logo_type(),
             custom_logo_path: default_logo_path(),
+            image_logo_path: default_image_path(),
             menu_items: default_menu_items(),
             terminal_colors: None,
             clock: None,

@@ -1,4 +1,3 @@
-mod ascii_image;
 mod config;
 
 use config::Config;
@@ -17,6 +16,7 @@ use ratatui::{
 };
 use std::io;
 use chrono::Local;
+use std::io::Write;
 
 const DOTT_LOGO: &str = r#"
     ;'*¨'`·- .,  ‘                   , ·. ,.-·~·.,   ‘             ,  . .,  °             ,  . .,  °    
@@ -33,6 +33,66 @@ const DOTT_LOGO: &str = r#"
                                        ‘                               °                      °         
                       
 "#;
+
+/// Display an image using Kitty's image protocol
+/// This is an experimental feature that requires a terminal supporting Kitty's graphics protocol
+fn display_kitty_image(path: &str) -> Result<(), String> {
+    use std::fs;
+    
+    // Read the image file
+    let image_data = fs::read(path).map_err(|e| format!("Failed to read image: {}", e))?;
+    
+    // Encode as base64
+    let encoded = base64_encode(&image_data);
+    
+    // Kitty graphics protocol escape sequence
+    // Format: \x1b_Gf=100,a=T,t=f;<base64_data>\x1b\\
+    // where:
+    // - f=100: format is PNG/auto-detect
+    // - a=T: transmission medium is direct
+    // - t=f: transmission is from file data
+    let escape_seq = format!("\x1b_Gf=100,a=T,t=f;{}\x1b\\", encoded);
+    
+    print!("{}", escape_seq);
+    io::stdout().flush().ok();
+    
+    Ok(())
+}
+
+/// Simple base64 encoding
+fn base64_encode(data: &[u8]) -> String {
+    const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut result = String::new();
+    
+    for chunk in data.chunks(3) {
+        let mut buf = [0u8; 3];
+        for (i, &byte) in chunk.iter().enumerate() {
+            buf[i] = byte;
+        }
+        
+        let b1 = (buf[0] >> 2) & 0x3F;
+        let b2 = ((buf[0] & 0x03) << 4) | ((buf[1] >> 4) & 0x0F);
+        let b3 = ((buf[1] & 0x0F) << 2) | ((buf[2] >> 6) & 0x03);
+        let b4 = buf[2] & 0x3F;
+        
+        result.push(BASE64_CHARS[b1 as usize] as char);
+        result.push(BASE64_CHARS[b2 as usize] as char);
+        
+        if chunk.len() > 1 {
+            result.push(BASE64_CHARS[b3 as usize] as char);
+        } else {
+            result.push('=');
+        }
+        
+        if chunk.len() > 2 {
+            result.push(BASE64_CHARS[b4 as usize] as char);
+        } else {
+            result.push('=');
+        }
+    }
+    
+    result
+}
 
 
 
@@ -95,6 +155,28 @@ impl App {
 }
 
 fn main() -> Result<(), io::Error> {
+    // Create app state early to check for image logo
+    let app = App::new();
+    
+    // If using image logo, display it before entering TUI (experimental feature)
+    if let config::LogoType::Image = app.config.logo_type {
+        if let Some(ref image_path) = app.config.image_logo_path {
+            // Expand ~ to home directory
+            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+            let expanded_path = image_path.replace("~", &home);
+            
+            println!("\n");
+            if let Err(e) = display_kitty_image(&expanded_path) {
+                eprintln!("Warning: Failed to display image logo: {}", e);
+                eprintln!("Note: This feature requires a terminal with Kitty graphics protocol support");
+            }
+            println!("\n");
+            
+            // Small delay to let image render
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
+    }
+    
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -102,8 +184,8 @@ fn main() -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Create app state
-    let mut app = App::new();
+    // Run the app
+    let mut app = app;
     let res = run_app(&mut terminal, &mut app);
 
     // Restore terminal
@@ -264,6 +346,16 @@ fn ui(f: &mut Frame, app: &App) {
                 DOTT_LOGO.to_string()
             }
         }
+        config::LogoType::Image => {
+            // For image logos, show a placeholder message
+            // Note: Kitty image protocol doesn't work well within ratatui
+            // Images should be displayed before launching the TUI
+            if let Some(ref path) = app.config.image_logo_path {
+                format!("\n\n  [Image Logo: {}]\n  (Experimental: Use Kitty terminal)\n  (Image displayed before TUI launch)\n\n", path)
+            } else {
+                DOTT_LOGO.to_string()
+            }
+        }
     };
 
     // Center the logo
@@ -307,7 +399,7 @@ fn ui(f: &mut Frame, app: &App) {
         .map(|(i, item)| {
             let (prefix, style) = if i == app.selected {
                 (
-                    "> ",
+                    "( ",
                     Style::default()
                         .fg(Color::Black)
                         .bg(Color::Cyan)
@@ -315,11 +407,12 @@ fn ui(f: &mut Frame, app: &App) {
                 )
             } else {
                 (
-                    "> ",
+                    "  ",
                     Style::default().fg(Color::White)
                 )
             };
-            ListItem::new(Line::from(Span::styled(format!("{}{}  ", prefix, item.name), style)))
+            let suffix = if i == app.selected { " )" } else { "  " };
+            ListItem::new(Line::from(Span::styled(format!("{}{}{}", prefix, item.name, suffix), style)))
         })
         .collect();
 
@@ -470,14 +563,14 @@ fn render_terminal_colors(f: &mut Frame, area: ratatui::layout::Rect, config: &C
 
                 // First row
                 let mut spans_row1 = vec![];
-                for i in 0..4 {
-                    spans_row1.push(Span::styled("■ ", Style::default().fg(colors[i])));
+                for color in colors.iter().take(4) {
+                    spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
                 }
                 
                 // Second row
                 let mut spans_row2 = vec![];
-                for i in 4..8 {
-                    spans_row2.push(Span::styled("■ ", Style::default().fg(colors[i])));
+                for color in colors.iter().skip(4).take(4) {
+                    spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
                 }
                 
                 let lines = vec![Line::from(spans_row1), Line::from(spans_row2)];

@@ -30,6 +30,11 @@ Simply run:
 dott
 ```
 
+The TUI features:
+- **Rounded selection**: Selected menu items are highlighted with rounded brackets `( )`
+- **Keyboard navigation**: Use arrow keys or vim-style `j`/`k` to navigate
+- **Quick actions**: Press Enter to execute the selected menu item
+
 ## Configuration
 
 The configuration file is automatically created at `~/.config/dott/config.toml` on first run.
@@ -69,6 +74,31 @@ args = []
 logo_type = "custom"
 custom_logo_path = "/home/username/.config/dott/custom-logo.txt"
 ```
+
+### Using an Image Logo (Experimental)
+
+**Note:** This is an experimental feature that requires a terminal supporting the [Kitty graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/).
+
+Dott can display actual images as logos using Kitty's image protocol. This works in terminals that support this protocol, such as:
+- [Kitty](https://sw.kovidgoyal.net/kitty/)
+- [WezTerm](https://wezfurlong.org/wezterm/)
+- [Konsole](https://konsole.kde.org/) (limited support)
+
+To use an image as your logo:
+
+1. Prepare your image file (PNG, JPEG, or other common formats)
+2. Update your config:
+
+```toml
+logo_type = "image"
+image_logo_path = "/home/username/.config/dott/logo.png"
+```
+
+**Limitations:**
+- The image will be displayed briefly before the TUI launches
+- Image rendering quality depends on your terminal emulator
+- Not all terminals support this feature
+- If your terminal doesn't support Kitty graphics protocol, you'll see a warning message
 
 ### Adding Custom Menu Items
 

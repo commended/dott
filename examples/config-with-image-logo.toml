@@ -1,0 +1,39 @@
+# Dott Configuration Example - Image Logo (Experimental)
+# This example demonstrates using an image as a logo with Kitty's graphics protocol
+
+# Logo type: "default", "custom", or "image" (experimental)
+logo_type = "image"
+
+# Path to image file (PNG, JPEG, etc.)
+# Requires a terminal with Kitty graphics protocol support
+# Works in: Kitty, WezTerm, and some versions of Konsole
+image_logo_path = "/home/runner/.config/dott/logo.png"
+
+# Menu items - each item can have a name, command, and arguments
+[[menu_items]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[menu_items]]
+name = "Edit Dott Config"
+command = ""
+args = []
+
+[[menu_items]]
+name = "View Shell"
+command = ""
+args = []
+
+[[menu_items]]
+name = "Quit"
+command = ""
+args = []
+
+# Optional: Terminal colors module
+[terminal_colors]
+shape = "circles"
+
+# Optional: Clock module
+[clock]
+position = "bottom"
