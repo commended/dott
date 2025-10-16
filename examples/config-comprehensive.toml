@@ -4,6 +4,7 @@
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
+# font = "JetBrains Mono"  # Optional: specify a custom font (default is terminal font)
 
 [[structure.build]]
 module = "logo"
@@ -31,6 +32,12 @@ module = "break"
 
 [[structure.build]]
 module = "entries3"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "selected"
 
 [[structure.build]]
 module = "break"
@@ -95,6 +102,9 @@ shape = "circles"
 
 # Clock module - displays current time
 [custom.clock]
+
+# Selected module - displays the command for the currently selected entry
+[custom.selected]
 
 # Configure break to skip 2 lines (default)
 # You can change this to any number

@@ -440,6 +440,32 @@ fn ui(f: &mut Frame, app: &App) {
                     Style::default().fg(Color::DarkGray)
                 )));
             }
+            config::ModuleType::Selected => {
+                if let Some(ref custom) = app.config.custom {
+                    if let Some(selected_entry) = app.get_selected_item() {
+                        let command_text = if selected_entry.command.is_empty() {
+                            // Handle special entries that don't have commands
+                            match selected_entry.name.as_str() {
+                                "Quit" => "Exit application".to_string(),
+                                "Edit Dott Config" => "Edit dott config in nvim".to_string(),
+                                "View Shell" => format!("View shell config in nvim"),
+                                _ => "No command".to_string(),
+                            }
+                        } else {
+                            let args_str = if selected_entry.args.is_empty() {
+                                String::new()
+                            } else {
+                                format!(" {}", selected_entry.args.join(" "))
+                            };
+                            format!("{}{}", selected_entry.command, args_str)
+                        };
+                        lines.push(Line::from(Span::styled(
+                            format!("Selected: {}", command_text),
+                            Style::default().fg(Color::Yellow)
+                        )));
+                    }
+                }
+            }
             config::ModuleType::Break => {
                 let break_lines = app.config.get_break_lines();
                 for _ in 0..break_lines {

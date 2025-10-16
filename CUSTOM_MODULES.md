@@ -161,7 +161,57 @@ lines = 3  # Each break now adds 3 empty lines instead of 2
 
 **Note**: You can use multiple `module = "break"` entries in your structure.build. Each will insert the configured number of empty lines.
 
-### 7. Quit
+### 7. Selected
+**Location in structure.build**: `module = "selected"`
+**Configuration**: `[custom.selected]`
+**Description**: Displays the command that will be executed for the currently highlighted/selected menu entry. This module shows what command will run when you press Enter on the selected item.
+
+**Configuration**:
+```toml
+[custom]
+
+[custom.selected]
+```
+
+**Display Format**:
+- For regular entries: Shows `Selected: <command> <args>`
+- For special entries:
+  - "Quit": Shows `Selected: Exit application`
+  - "Edit Dott Config": Shows `Selected: Edit dott config in nvim`
+  - "View Shell": Shows `Selected: View shell config in nvim`
+
+**Example**:
+```toml
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "selected"  # Shows command for selected entry
+
+[[structure.build]]
+module = "help"
+
+[[entries]]
+name = "System Monitor"
+command = "htop"
+args = []
+
+[custom]
+
+[custom.selected]
+```
+
+When "System Monitor" is highlighted, the selected module will display: `Selected: htop`
+
+**Note**: The selected module must be declared in `[custom.selected]` even though it has no configurable settings. Its position is determined by where "selected" appears in your `structure.build` order.
+
+### 8. Quit
 **Location in structure.build**: `module = "quit"`
 **Configuration**: Not configurable
 **Description**: Exits the application immediately when encountered. This is different from the "Quit" entry which is a menu item the user can select. This module type would immediately quit when the structure is rendered, so it's typically not used in practice.
@@ -173,6 +223,7 @@ The `structure` section determines how modules are positioned and ordered:
 ```toml
 [structure]
 position = "center"  # center, left, or right
+font = "JetBrains Mono"  # Optional: specify a custom font (default is terminal font)
 
 [[structure.build]]
 module = "logo"
@@ -187,6 +238,9 @@ module = "colors"
 module = "clock"
 
 [[structure.build]]
+module = "selected"
+
+[[structure.build]]
 module = "help"
 ```
 
@@ -194,6 +248,10 @@ module = "help"
 - `center`: Centers the UI elements horizontally (default)
 - `left`: Aligns UI elements to the left
 - `right`: Aligns UI elements to the right
+
+### Font Option:
+- `font`: Optional string to specify a custom font name (default: uses terminal's default font)
+- Note: The font setting is stored in configuration but currently uses the terminal's default font for rendering
 
 ### Build Order:
 The modules appear in the order they are declared in `structure.build`. You can:
@@ -268,6 +326,8 @@ shape = "circles"
 
 [custom.clock]
 
+[custom.selected]
+
 [custom.break]
 lines = 2
 ```
@@ -291,6 +351,9 @@ module = "break"        # Add spacing between entry groups
 
 [[structure.build]]
 module = "entries2"
+
+[[structure.build]]
+module = "selected"     # Show command for selected entry
 
 [[structure.build]]
 module = "colors"
@@ -328,6 +391,8 @@ shape = "circles"
 
 [custom.clock]
 
+[custom.selected]
+
 [custom.break]
 lines = 2  # Each break adds 2 empty lines
 ```
@@ -336,12 +401,16 @@ lines = 2  # Each break adds 2 empty lines
 ```toml
 [structure]
 position = "center"
+font = "JetBrains Mono"  # Optional: specify a custom font
 
 [[structure.build]]
 module = "logo"
 
 [[structure.build]]
 module = "entries"
+
+[[structure.build]]
+module = "selected"
 
 [[structure.build]]
 module = "colors"
@@ -373,6 +442,8 @@ shape = "circles"
 
 [custom.clock]
 
+[custom.selected]
+
 [custom.break]
 lines = 2
 ```
@@ -390,6 +461,9 @@ module = "logo"
 
 [[structure.build]]
 module = "entries"
+
+[[structure.build]]
+module = "selected"
 
 [[structure.build]]
 module = "colors"
