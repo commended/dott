@@ -51,7 +51,6 @@ pub enum ModuleType {
     Selected,
     Quit,
     SystemInfo,
-    Weather,
     Quote,
     Uptime,
     DiskUsage,
@@ -119,9 +118,6 @@ pub struct CustomModules {
     
     #[serde(default)]
     pub system_info: SystemInfoConfig,
-    
-    #[serde(default)]
-    pub weather: WeatherConfig,
     
     #[serde(default)]
     pub quote: QuoteConfig,
@@ -246,31 +242,6 @@ pub struct SystemInfoConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct WeatherConfig {
-    #[serde(default)]
-    pub location: Option<String>,
-    #[serde(default)]
-    pub units: WeatherUnits,
-}
-
-impl Default for WeatherConfig {
-    fn default() -> Self {
-        WeatherConfig {
-            location: None,
-            units: WeatherUnits::Metric,
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "lowercase")]
-pub enum WeatherUnits {
-    #[default]
-    Metric,
-    Imperial,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuoteConfig {
     #[serde(default)]
     pub quotes: Vec<String>,
@@ -384,7 +355,6 @@ impl Config {
                     "selected" => Some(ModuleType::Selected),
                     "quit" => Some(ModuleType::Quit),
                     "system_info" | "systeminfo" => Some(ModuleType::SystemInfo),
-                    "weather" => Some(ModuleType::Weather),
                     "quote" => Some(ModuleType::Quote),
                     "uptime" => Some(ModuleType::Uptime),
                     "disk_usage" | "diskusage" | "disk" => Some(ModuleType::DiskUsage),

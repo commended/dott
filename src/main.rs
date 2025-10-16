@@ -460,12 +460,7 @@ fn ui(f: &mut Frame, app: &App) {
                     lines.extend(system_lines);
                 }
             }
-            config::ModuleType::Weather => {
-                if let Some(ref custom) = app.config.custom {
-                    let weather_lines = render_weather(&custom.weather);
-                    lines.extend(weather_lines);
-                }
-            }
+
             config::ModuleType::Quote => {
                 if let Some(ref custom) = app.config.custom {
                     let quote_lines = render_quote(&custom.quote);
@@ -506,7 +501,10 @@ fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> Str
         config::LogoType::Default => DOTT_LOGO.to_string(),
         config::LogoType::Custom => {
             if let Some(ref path) = config.custom_logo_path {
-                std::fs::read_to_string(path).unwrap_or_else(|_| DOTT_LOGO.to_string())
+                // Expand ~ to home directory
+                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                let expanded_path = path.replace("~", &home);
+                std::fs::read_to_string(&expanded_path).unwrap_or_else(|_| DOTT_LOGO.to_string())
             } else {
                 DOTT_LOGO.to_string()
             }
@@ -593,26 +591,6 @@ fn render_system_info() -> Vec<Line<'static>> {
         format!("󰇄 {} | {} | {}", hostname, os, kernel),
         Style::default().fg(Color::Magenta)
     )));
-    
-    lines
-}
-
-fn render_weather(config: &config::WeatherConfig) -> Vec<Line<'static>> {
-    let mut lines = Vec::new();
-    
-    // For now, just show a placeholder
-    // Real implementation would fetch from a weather API
-    if let Some(ref location) = config.location {
-        lines.push(Line::from(Span::styled(
-            format!("󰖐 Weather in {}: Coming soon!", location),
-            Style::default().fg(Color::Blue)
-        )));
-    } else {
-        lines.push(Line::from(Span::styled(
-            "󰖐 Weather: Set location in config".to_string(),
-            Style::default().fg(Color::DarkGray)
-        )));
-    }
     
     lines
 }

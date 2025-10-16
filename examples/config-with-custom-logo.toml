@@ -1,0 +1,51 @@
+# Example config demonstrating custom logo with .txt file
+
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo:custom"  # Specify custom logo type directly
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+# The custom logo will be loaded from the specified .txt file
+# Both absolute paths and ~ notation are supported
+logo_type = "custom"
+custom_logo_path = "~/custom-logo.txt"  # Or use absolute path like "/path/to/logo.txt"
+
+# Note: To use the custom logo, create a .txt file with your ASCII art
+# Example: copy examples/custom-logo.txt to ~/custom-logo.txt
+
+# Entries - terminal commands with name, command, and arguments
+[[entries]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries]]
+name = "Edit Dott Config"
+command = ""
+args = []
+
+[[entries]]
+name = "Quit"
+command = ""
+args = []
+
+# Custom modules configuration
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
+
+[custom.selected]
+
+[custom.break]
+lines = 2

@@ -330,9 +330,6 @@ module = "disk"
 module = "quote"
 
 [[structure.build]]
-module = "weather"
-
-[[structure.build]]
 module = "entries"
 
 logo_type = "default"
@@ -353,10 +350,6 @@ args = []
 [custom.disk_usage]
 path = "/"
 
-[custom.weather]
-location = "New York"
-units = "metric"
-
 [custom.quote]
 quotes = ["Test quote"]
 "#;
@@ -370,7 +363,6 @@ quotes = ["Test quote"]
     assert_eq!(build[2]["module"].as_str().unwrap(), "memory");
     assert_eq!(build[3]["module"].as_str().unwrap(), "disk");
     assert_eq!(build[4]["module"].as_str().unwrap(), "quote");
-    assert_eq!(build[5]["module"].as_str().unwrap(), "weather");
     
     // Verify custom modules section
     let custom = &config["custom"];
@@ -378,15 +370,10 @@ quotes = ["Test quote"]
     assert!(custom.get("uptime").is_some());
     assert!(custom.get("memory").is_some());
     assert!(custom.get("disk_usage").is_some());
-    assert!(custom.get("weather").is_some());
     assert!(custom.get("quote").is_some());
     
     // Verify disk_usage config
     assert_eq!(custom["disk_usage"]["path"].as_str().unwrap(), "/");
-    
-    // Verify weather config
-    assert_eq!(custom["weather"]["location"].as_str().unwrap(), "New York");
-    assert_eq!(custom["weather"]["units"].as_str().unwrap(), "metric");
     
     // Verify quote config
     let quotes = custom["quote"]["quotes"].as_array().unwrap();

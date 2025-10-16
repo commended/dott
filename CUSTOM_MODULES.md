@@ -235,27 +235,7 @@ Shows: `󰇄 hostname | os | kernel`
 
 **Note**: The system_info module must be declared in `[custom.system_info]` even though it has no configurable settings.
 
-### 10. Weather
-**Location in structure.build**: `module = "weather"`
-**Configuration**: `[custom.weather]`
-**Description**: Displays weather information for a specified location (placeholder for now, can be extended with API integration).
-
-**Configuration Options**:
-```toml
-[custom]
-
-[custom.weather]
-location = "New York"
-units = "metric"  # or "imperial"
-```
-
-**Options**:
-- `location`: The location for weather information (optional)
-- `units`: Temperature units - "metric" (Celsius) or "imperial" (Fahrenheit)
-
-**Note**: This is currently a placeholder module. Real weather data would require API integration.
-
-### 11. Quote
+### 10. Quote
 **Location in structure.build**: `module = "quote"`
 **Configuration**: `[custom.quote]`
 **Description**: Displays a random quote from a configured list. Great for inspiration and motivation!
@@ -280,7 +260,7 @@ If no quotes are provided, a default set of programming and inspirational quotes
 - Automatically wraps long quotes to multiple lines (max 80 characters per line)
 - Displays in italic yellow text
 
-### 12. Uptime
+### 11. Uptime
 **Location in structure.build**: `module = "uptime"`
 **Configuration**: `[custom.uptime]`
 **Description**: Displays system uptime showing how long the system has been running.
@@ -299,7 +279,7 @@ If no quotes are provided, a default set of programming and inspirational quotes
 
 **Note**: Currently only supported on Linux systems.
 
-### 13. Disk Usage
+### 12. Disk Usage
 **Location in structure.build**: `module = "disk_usage"`, `module = "diskusage"`, or `module = "disk"`
 **Configuration**: `[custom.disk_usage]`
 **Description**: Displays disk usage information for a specified mount point.
@@ -320,7 +300,7 @@ Shows: ` Disk: used GB / total GB (percentage%)`
 
 **Example**: ` Disk: 45 / 100 GB (45%)`
 
-### 14. Memory
+### 13. Memory
 **Location in structure.build**: `module = "memory"` or `module = "mem"`
 **Configuration**: `[custom.memory]`
 **Description**: Displays current memory (RAM) usage.
@@ -680,10 +660,6 @@ lines = 2
 
 [custom.disk_usage]
 path = "/"
-
-[custom.weather]
-location = "New York"
-units = "metric"
 
 [custom.quote]
 quotes = [
