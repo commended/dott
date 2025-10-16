@@ -234,16 +234,8 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         app.selected = 0;
                         println!("✓ Config reloaded!");
 
-                        println!("\nPress any key to return to menu...");
-                        enable_raw_mode()?;
-                        loop {
-                            if event::poll(std::time::Duration::from_millis(100))? {
-                                if let Event::Key(_) = event::read()? {
-                                    break;
-                                }
-                            }
-                        }
-                        disable_raw_mode()?;
+                        // Small delay to let user see the message
+                        std::thread::sleep(std::time::Duration::from_millis(500));
 
                         // Restore TUI
                         enable_raw_mode()?;
@@ -338,20 +330,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                 let _ = std::process::Command::new(&selected.command)
                                     .args(&args)
                                     .status();
-
-                                // Wait for user to press 'q' before returning to menu
-                                println!("\nPress 'q' to return to menu...");
-                                enable_raw_mode()?;
-                                loop {
-                                    if event::poll(std::time::Duration::from_millis(100))? {
-                                        if let Event::Key(key) = event::read()? {
-                                            if let KeyCode::Char('q') = key.code {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                disable_raw_mode()?;
 
                                 // Restore TUI
                                 enable_raw_mode()?;
