@@ -1,3 +1,6 @@
+# Logo configuration
+logo_type = "default"
+
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
@@ -9,8 +12,7 @@ position = "center"
 4 = "clock"
 5 = "help"
 
-logo_type = "default"
-
+# Entries - terminal commands with name, command, and arguments
 [[entries]]
 name = "View Dotfiles"
 command = "yazi"
