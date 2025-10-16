@@ -228,31 +228,11 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         )?;
                         terminal.show_cursor()?;
 
-                        // Update dott
-                        println!("Updating dott...");
-                        let status = std::process::Command::new("cargo")
-                            .args(["install", "--git", "https://github.com/commended/dott", "--force"])
-                            .status();
-
-                        match status {
-                            Ok(exit_status) => {
-                                if exit_status.success() {
-                                    println!("✓ Dott updated successfully!");
-                                    println!("Reloading config...");
-                                    
-                                    // Reload config
-                                    app.config = Config::load();
-                                    app.selected = 0;
-                                    
-                                    println!("✓ Config reloaded!");
-                                } else {
-                                    println!("✗ Failed to update dott");
-                                }
-                            }
-                            Err(e) => {
-                                println!("✗ Error running update command: {}", e);
-                            }
-                        }
+                        // Reload config
+                        println!("Reloading config...");
+                        app.config = Config::load();
+                        app.selected = 0;
+                        println!("✓ Config reloaded!");
 
                         println!("\nPress any key to return to menu...");
                         enable_raw_mode()?;
@@ -555,7 +535,7 @@ fn ui(f: &mut Frame, app: &App) {
     }
 
     // Help text at bottom
-    let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | u: Update & Reload | q/Esc: Quit")
+    let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | u: Reload Config | q/Esc: Quit")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(help, vertical_chunks[2]);
