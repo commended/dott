@@ -218,6 +218,62 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
+                    KeyCode::Char('u') => {
+                        // Exit TUI temporarily
+                        disable_raw_mode()?;
+                        execute!(
+                            terminal.backend_mut(),
+                            LeaveAlternateScreen,
+                            DisableMouseCapture
+                        )?;
+                        terminal.show_cursor()?;
+
+                        // Update dott
+                        println!("Updating dott...");
+                        let status = std::process::Command::new("cargo")
+                            .args(&["install", "--git", "https://github.com/commended/dott", "--force"])
+                            .status();
+
+                        match status {
+                            Ok(exit_status) => {
+                                if exit_status.success() {
+                                    println!("✓ Dott updated successfully!");
+                                    println!("Reloading config...");
+                                    
+                                    // Reload config
+                                    app.config = Config::load();
+                                    app.selected = 0;
+                                    
+                                    println!("✓ Config reloaded!");
+                                } else {
+                                    println!("✗ Failed to update dott");
+                                }
+                            }
+                            Err(e) => {
+                                println!("✗ Error running update command: {}", e);
+                            }
+                        }
+
+                        println!("\nPress any key to return to menu...");
+                        enable_raw_mode()?;
+                        loop {
+                            if event::poll(std::time::Duration::from_millis(100))? {
+                                if let Event::Key(_) = event::read()? {
+                                    break;
+                                }
+                            }
+                        }
+                        disable_raw_mode()?;
+
+                        // Restore TUI
+                        enable_raw_mode()?;
+                        execute!(
+                            terminal.backend_mut(),
+                            EnterAlternateScreen,
+                            EnableMouseCapture
+                        )?;
+                        terminal.clear()?;
+                    }
                     KeyCode::Enter => {
                     let selected = app.get_selected_item();
                     
@@ -499,7 +555,7 @@ fn ui(f: &mut Frame, app: &App) {
     }
 
     // Help text at bottom
-    let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | q/Esc: Quit")
+    let help = Paragraph::new("↑/k: Up | ↓/j: Down | Enter: Select | u: Update & Reload | q/Esc: Quit")
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(help, vertical_chunks[2]);
