@@ -303,6 +303,20 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                     .args(&args)
                                     .status();
 
+                                // Wait for user to press 'q' before returning to menu
+                                println!("\nPress 'q' to return to menu...");
+                                enable_raw_mode()?;
+                                loop {
+                                    if event::poll(std::time::Duration::from_millis(100))? {
+                                        if let Event::Key(key) = event::read()? {
+                                            if let KeyCode::Char('q') = key.code {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                disable_raw_mode()?;
+
                                 // Restore TUI
                                 enable_raw_mode()?;
                                 execute!(
