@@ -123,7 +123,6 @@ fn detect_shell_config() -> Option<String> {
 struct App {
     selected: usize,
     config: Config,
-    detected_shell_config: Option<String>,
     // Flattened list of all entries with their group names
     all_entries: Vec<(String, config::MenuItem)>,
 }
@@ -131,7 +130,6 @@ struct App {
 impl App {
     fn new() -> App {
         let config = Config::load();
-        let detected_shell_config = detect_shell_config();
         
         // Build a flattened list of all entries in the order they appear in structure.build
         let mut all_entries = Vec::new();
@@ -147,7 +145,6 @@ impl App {
         App {
             selected: 0,
             config,
-            detected_shell_config,
             all_entries,
         }
     }
@@ -238,17 +235,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
                     KeyCode::Char('u') => {
-                        // Exit TUI temporarily
-                        disable_raw_mode()?;
-                        execute!(
-                            terminal.backend_mut(),
-                            LeaveAlternateScreen,
-                            DisableMouseCapture
-                        )?;
-                        terminal.show_cursor()?;
-
-                        // Reload config
-                        println!("Reloading config...");
+                        // Reload config silently (only show errors)
                         app.config = Config::load();
                         app.selected = 0;
                         
@@ -263,18 +250,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                             }
                         }
                         
-                        println!("✓ Config reloaded!");
-
-                        // Small delay to let user see the message
-                        std::thread::sleep(std::time::Duration::from_millis(500));
-
-                        // Restore TUI
-                        enable_raw_mode()?;
-                        execute!(
-                            terminal.backend_mut(),
-                            EnterAlternateScreen,
-                            EnableMouseCapture
-                        )?;
+                        // Redraw immediately
                         terminal.clear()?;
                     }
                     KeyCode::Enter => {
@@ -423,13 +399,13 @@ fn ui(f: &mut Frame, app: &App) {
                 }
             }
             config::ModuleType::Colors => {
-                if let Some(ref custom) = app.config.custom {
-                    let color_lines = render_terminal_colors_lines(&custom.terminal_colors);
+                if let Some(ref _custom) = app.config.custom {
+                    let color_lines = render_terminal_colors_lines(&app.config.custom.as_ref().unwrap().terminal_colors);
                     lines.extend(color_lines);
                 }
             }
             config::ModuleType::Clock => {
-                if let Some(ref custom) = app.config.custom {
+                if let Some(ref _custom) = app.config.custom {
                     let time = Local::now().format("%H:%M:%S").to_string();
                     lines.push(Line::from(Span::styled(time, Style::default().fg(Color::Cyan))));
                 }
@@ -441,7 +417,7 @@ fn ui(f: &mut Frame, app: &App) {
                 )));
             }
             config::ModuleType::Selected => {
-                if let Some(ref custom) = app.config.custom {
+                if let Some(ref _custom) = app.config.custom {
                     if let Some(selected_entry) = app.get_selected_item() {
                         let command_text = if selected_entry.command.is_empty() {
                             // Handle special entries that don't have commands
@@ -485,10 +461,6 @@ fn ui(f: &mut Frame, app: &App) {
         .style(Style::default().fg(Color::White));
     
     f.render_widget(paragraph, size);
-}
-
-fn get_logo_text(config: &Config) -> String {
-    get_logo_text_with_type(&config.logo_type, config)
 }
 
 fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> String {

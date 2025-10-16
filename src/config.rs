@@ -37,7 +37,6 @@ pub struct Config {
 
 #[derive(Debug, Clone)]
 pub struct OrderedModule {
-    pub order: u32,
     pub module_type: ModuleType,
 }
 
@@ -251,7 +250,7 @@ impl Config {
     pub fn get_ordered_modules(&self) -> Vec<OrderedModule> {
         let mut modules = Vec::new();
         
-        for (order, build_item) in self.structure.build.iter().enumerate() {
+        for build_item in self.structure.build.iter() {
             let module_name = &build_item.module;
             let module_type = if module_name.starts_with("logo") {
                 // Parse logo type from "logo", "logo:default", "logo:custom", or "logo:image"
@@ -292,7 +291,6 @@ impl Config {
             
             if let Some(mt) = module_type {
                 modules.push(OrderedModule {
-                    order: order as u32,
                     module_type: mt,
                 });
             }
