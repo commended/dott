@@ -10,12 +10,20 @@ logo_type = "default"
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"
-2 = "entries"
-3 = "break"
-4 = "entries2"
-5 = "help"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries2"
+
+[[structure.build]]
+module = "help"
 
 [[entries]]
 name = "First Group Item 1"
@@ -45,12 +53,13 @@ args = []
     assert_eq!(config["structure"]["position"].as_str().unwrap(), "center");
     
     // Verify build order
-    let build = &config["structure"]["build"];
-    assert_eq!(build["1"].as_str().unwrap(), "logo");
-    assert_eq!(build["2"].as_str().unwrap(), "entries");
-    assert_eq!(build["3"].as_str().unwrap(), "break");
-    assert_eq!(build["4"].as_str().unwrap(), "entries2");
-    assert_eq!(build["5"].as_str().unwrap(), "help");
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build.len(), 5);
+    assert_eq!(build[0]["module"].as_str().unwrap(), "logo");
+    assert_eq!(build[1]["module"].as_str().unwrap(), "entries");
+    assert_eq!(build[2]["module"].as_str().unwrap(), "break");
+    assert_eq!(build[3]["module"].as_str().unwrap(), "entries2");
+    assert_eq!(build[4]["module"].as_str().unwrap(), "help");
     
     // Verify entries
     let entries = config["entries"].as_array().unwrap();
@@ -92,10 +101,14 @@ logo_type = "default"
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"
-2 = "break"
-3 = "entries"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
 
 [[entries]]
 name = "Test"
@@ -106,8 +119,8 @@ args = []
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
     // Verify that break is in the structure
-    let build = &config["structure"]["build"];
-    assert_eq!(build["2"].as_str().unwrap(), "break");
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build[1]["module"].as_str().unwrap(), "break");
 }
 
 #[test]
@@ -119,10 +132,14 @@ logo_type = "default"
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"
-2 = "break"
-3 = "entries"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
 
 [[entries]]
 name = "Test"
@@ -150,9 +167,11 @@ fn test_logo_type_in_structure_build() {
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo:custom"
-2 = "entries"
+[[structure.build]]
+module = "logo:custom"
+
+[[structure.build]]
+module = "entries"
 
 custom_logo_path = "/path/to/logo.txt"
 
@@ -165,6 +184,6 @@ args = []
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
     // Verify logo type in structure build
-    let build = &config["structure"]["build"];
-    assert_eq!(build["1"].as_str().unwrap(), "logo:custom");
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build[0]["module"].as_str().unwrap(), "logo:custom");
 }

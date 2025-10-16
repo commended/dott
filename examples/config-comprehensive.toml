@@ -1,27 +1,52 @@
 # Comprehensive Dott Configuration Example
 # Demonstrates all features including multiple entry clusters
 
-# Logo type can be set here for backward compatibility
-# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
-logo_type = "default"
-
+# Structure defines the layout and order of modules
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo"          # Can also be "logo:default", "logo:custom", or "logo:image"
-2 = "break"
-3 = "clock"
-4 = "break"
-5 = "entries"
-6 = "break"
-7 = "entries2"
-8 = "break"
-9 = "entries3"
-10 = "break"
-11 = "colors"
-12 = "break"
-13 = "help"
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries2"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries3"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "help"
+
+# Logo type can be set here for backward compatibility
+# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
+logo_type = "default"
 
 # Development tools
 [[entries]]
@@ -61,11 +86,14 @@ name = "Quit"
 command = ""
 args = []
 
+# Custom modules configuration
 [custom]
 
+# Terminal colors module - displays color palette
 [custom.terminal_colors]
 shape = "circles"
 
+# Clock module - displays current time
 [custom.clock]
 
 # Configure break to skip 2 lines (default)

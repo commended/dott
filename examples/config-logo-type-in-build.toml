@@ -1,15 +1,24 @@
 # Dott Configuration Example - Logo Type in Structure Build
 # This example demonstrates specifying logo type directly in structure.build
 
+# Structure defines the layout and order of modules
 [structure]
 position = "center"
 
-[structure.build]
-1 = "logo:default"   # Logo type specified here (can be "logo:default", "logo:custom", or "logo:image")
-2 = "break"
-3 = "entries"
-4 = "break"
-5 = "help"
+[[structure.build]]
+module = "logo:default"   # Logo type specified here (can be "logo:default", "logo:custom", or "logo:image")
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "help"
 
 # Entries - terminal commands with name, command, and arguments
 [[entries]]
@@ -32,8 +41,15 @@ name = "Quit"
 command = ""
 args = []
 
-# Optional: Custom modules (hardcoded components)
+# Custom modules configuration
 [custom]
+
+# Terminal colors module - displays color palette
+[custom.terminal_colors]
+shape = "circles"
+
+# Clock module - displays current time
+[custom.clock]
 
 # Configure break to add custom number of empty lines
 [custom.break]

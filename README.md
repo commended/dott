@@ -45,23 +45,49 @@ The TUI features:
 
 The config file is located at `~/.config/dott/config.toml`. You can customize:
 
-- **Logo**: Choose between default, custom ASCII art, or image (Kitty protocol). Can be set via top-level `logo_type` or directly in `structure.build` (e.g., `"logo:default"`, `"logo:custom"`, `"logo:image"`)
 - **Structure**: Define the order of modules (logo, entries, clock, colors, help, break)
+- **Logo**: Choose between default, custom ASCII art, or image (Kitty protocol). Can be set via top-level `logo_type` or directly in `structure.build` (e.g., `"logo:default"`, `"logo:custom"`, `"logo:image"`)
 - **Entries**: Terminal commands with name, command, and arguments
 - **Multiple Entry Groups**: Create separate entry groups (entries, entries2, entries3, etc.)
-- **Custom Modules**: Terminal colors, clock, help text, and configurable breaks
+- **Custom Modules**: Terminal colors, clock, help text, and configurable breaks (must be declared to use)
 - **Break Lines**: Configure how many empty lines each break adds (default: 2)
 
 Example structure with multiple entry groups:
 ```toml
-[structure.build]
-1 = "logo:default"   # Logo type can be specified here
-2 = "clock"
-3 = "entries"        # First group of commands
-4 = "break"          # Adds empty lines (default: 2, configurable)
-5 = "entries2"       # Second group of commands
-6 = "colors"
-7 = "help"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo:default"   # Logo type can be specified here
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "entries"        # First group of commands
+
+[[structure.build]]
+module = "break"          # Adds empty lines (default: 2, configurable)
+
+[[structure.build]]
+module = "entries2"       # Second group of commands
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "help"
+
+# Logo configuration
+logo_type = "default"
+
+# Custom modules must be declared
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
 
 [custom.break]
 lines = 2            # Configure break to add 2 empty lines (default)
