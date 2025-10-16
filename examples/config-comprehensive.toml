@@ -1,13 +1,15 @@
 # Comprehensive Dott Configuration Example
 # Demonstrates all features including multiple entry clusters
 
+# Logo type can be set here for backward compatibility
+# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
 logo_type = "default"
 
 [structure]
 position = "center"
 
 [structure.build]
-1 = "logo"
+1 = "logo"          # Can also be "logo:default", "logo:custom", or "logo:image"
 2 = "break"
 3 = "clock"
 4 = "break"
@@ -65,3 +67,8 @@ args = []
 shape = "circles"
 
 [custom.clock]
+
+# Configure break to skip 2 lines (default)
+# You can change this to any number
+[custom.break]
+lines = 2

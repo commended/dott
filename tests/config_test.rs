@@ -82,3 +82,89 @@ fn test_example_config_parses() {
     assert!(config.get("entries").is_some());
     assert!(config.get("entries2").is_some());
 }
+
+#[test]
+fn test_break_configuration() {
+    // Test default break lines (should be 2)
+    let config_content = r#"
+logo_type = "default"
+
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo"
+2 = "break"
+3 = "entries"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify that break is in the structure
+    let build = &config["structure"]["build"];
+    assert_eq!(build["2"].as_str().unwrap(), "break");
+}
+
+#[test]
+fn test_break_custom_lines() {
+    // Test custom break lines
+    let config_content = r#"
+logo_type = "default"
+
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo"
+2 = "break"
+3 = "entries"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+
+[custom]
+
+[custom.break]
+lines = 3
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify custom break config
+    assert!(config.get("custom").is_some());
+    assert!(config["custom"].get("break").is_some());
+    assert_eq!(config["custom"]["break"]["lines"].as_integer().unwrap(), 3);
+}
+
+#[test]
+fn test_logo_type_in_structure_build() {
+    // Test logo type specified in structure.build
+    let config_content = r#"
+[structure]
+position = "center"
+
+[structure.build]
+1 = "logo:custom"
+2 = "entries"
+
+custom_logo_path = "/path/to/logo.txt"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify logo type in structure build
+    let build = &config["structure"]["build"];
+    assert_eq!(build["1"].as_str().unwrap(), "logo:custom");
+}

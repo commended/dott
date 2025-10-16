@@ -44,7 +44,7 @@ pub struct OrderedModule {
 
 #[derive(Debug, Clone)]
 pub enum ModuleType {
-    Logo,
+    Logo(LogoType),
     Entries(String), // String indicates which entries array (e.g., "entries", "entries2")
     Colors,
     Clock,
@@ -114,6 +114,9 @@ pub struct CustomModules {
 
     #[serde(default)]
     pub clock: Option<ClockConfig>,
+
+    #[serde(default)]
+    pub break_: Option<BreakConfig>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -192,6 +195,16 @@ pub struct ClockConfig {
     // No position field needed
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BreakConfig {
+    #[serde(default = "default_break_lines")]
+    pub lines: usize,
+}
+
+fn default_break_lines() -> usize {
+    2
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -227,19 +240,40 @@ impl Config {
         let mut modules = Vec::new();
         
         for (order, module_name) in &self.structure.build {
-            let module_type = match module_name.as_str() {
-                "logo" => Some(ModuleType::Logo),
-                "entries" => Some(ModuleType::Entries("entries".to_string())),
-                "entries2" => Some(ModuleType::Entries("entries2".to_string())),
-                "entries3" => Some(ModuleType::Entries("entries3".to_string())),
-                "entries4" => Some(ModuleType::Entries("entries4".to_string())),
-                "entries5" => Some(ModuleType::Entries("entries5".to_string())),
-                "colors" => Some(ModuleType::Colors),
-                "clock" => Some(ModuleType::Clock),
-                "help" => Some(ModuleType::Help),
-                "break" => Some(ModuleType::Break),
-                "quit" => Some(ModuleType::Quit),
-                _ => None,
+            let module_type = if module_name.starts_with("logo") {
+                // Parse logo type from "logo", "logo:default", "logo:custom", or "logo:image"
+                let logo_type = if module_name == "logo" {
+                    // Use the top-level logo_type if just "logo" is specified
+                    self.logo_type.clone()
+                } else {
+                    // Parse the type from "logo:TYPE"
+                    let parts: Vec<&str> = module_name.split(':').collect();
+                    if parts.len() == 2 {
+                        match parts[1] {
+                            "default" => LogoType::Default,
+                            "custom" => LogoType::Custom,
+                            "image" => LogoType::Image,
+                            _ => self.logo_type.clone(), // Fallback to top-level
+                        }
+                    } else {
+                        self.logo_type.clone()
+                    }
+                };
+                Some(ModuleType::Logo(logo_type))
+            } else {
+                match module_name.as_str() {
+                    "entries" => Some(ModuleType::Entries("entries".to_string())),
+                    "entries2" => Some(ModuleType::Entries("entries2".to_string())),
+                    "entries3" => Some(ModuleType::Entries("entries3".to_string())),
+                    "entries4" => Some(ModuleType::Entries("entries4".to_string())),
+                    "entries5" => Some(ModuleType::Entries("entries5".to_string())),
+                    "colors" => Some(ModuleType::Colors),
+                    "clock" => Some(ModuleType::Clock),
+                    "help" => Some(ModuleType::Help),
+                    "break" => Some(ModuleType::Break),
+                    "quit" => Some(ModuleType::Quit),
+                    _ => None,
+                }
             };
             
             if let Some(mt) = module_type {
@@ -251,6 +285,16 @@ impl Config {
         }
         
         modules
+    }
+
+    /// Get the number of lines for a break module
+    pub fn get_break_lines(&self) -> usize {
+        if let Some(ref custom) = self.custom {
+            if let Some(ref break_config) = custom.break_ {
+                return break_config.lines;
+            }
+        }
+        2 // Default to 2 lines
     }
 }
 

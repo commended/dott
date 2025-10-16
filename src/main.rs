@@ -388,16 +388,14 @@ fn ui(f: &mut Frame, app: &App) {
     // Get ordered modules from config
     let ordered_modules = app.config.get_ordered_modules();
     
-    // Pre-allocate logo text to extend its lifetime
-    let logo_text = get_logo_text(&app.config);
-    
     // Build the layout dynamically based on modules
     let mut lines = Vec::new();
     let mut current_entry_index = 0;
     
     for module in &ordered_modules {
         match &module.module_type {
-            config::ModuleType::Logo => {
+            config::ModuleType::Logo(logo_type) => {
+                let logo_text = get_logo_text_with_type(logo_type, &app.config);
                 for line in logo_text.lines() {
                     lines.push(Line::from(Span::styled(line.to_string(), Style::default().fg(Color::Cyan))));
                 }
@@ -447,7 +445,10 @@ fn ui(f: &mut Frame, app: &App) {
                 )));
             }
             config::ModuleType::Break => {
-                lines.push(Line::from(""));
+                let break_lines = app.config.get_break_lines();
+                for _ in 0..break_lines {
+                    lines.push(Line::from(""));
+                }
             }
             config::ModuleType::Quit => {
                 // Quit is a special entry that should be handled like other entries
@@ -465,7 +466,11 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn get_logo_text(config: &Config) -> String {
-    match config.logo_type {
+    get_logo_text_with_type(&config.logo_type, config)
+}
+
+fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> String {
+    match logo_type {
         config::LogoType::Default => DOTT_LOGO.to_string(),
         config::LogoType::Custom => {
             if let Some(ref path) = config.custom_logo_path {
