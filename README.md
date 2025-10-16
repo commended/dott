@@ -1,6 +1,7 @@
 # dott
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-grey.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-white.svg)](https://opensource.org/licenses/MIT)
+![GitHub Repo stars](https://img.shields.io/github/stars/commended/dott)
 
 a beautiful and fast tui written in rust
 
