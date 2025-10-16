@@ -50,6 +50,12 @@ pub enum ModuleType {
     Break,
     Selected,
     Quit,
+    SystemInfo,
+    Weather,
+    Quote,
+    Uptime,
+    DiskUsage,
+    Memory,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -110,6 +116,24 @@ pub struct CustomModules {
     
     #[serde(default)]
     pub selected: SelectedConfig,
+    
+    #[serde(default)]
+    pub system_info: SystemInfoConfig,
+    
+    #[serde(default)]
+    pub weather: WeatherConfig,
+    
+    #[serde(default)]
+    pub quote: QuoteConfig,
+    
+    #[serde(default)]
+    pub uptime: UptimeConfig,
+    
+    #[serde(default)]
+    pub disk_usage: DiskUsageConfig,
+    
+    #[serde(default)]
+    pub memory: MemoryConfig,
 }
 
 fn default_terminal_colors() -> TerminalColorsConfig {
@@ -216,6 +240,80 @@ pub struct SelectedConfig {
     // This module will display the command for the currently selected entry
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct SystemInfoConfig {
+    // Display system information: hostname, OS, kernel
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WeatherConfig {
+    #[serde(default)]
+    pub location: Option<String>,
+    #[serde(default)]
+    pub units: WeatherUnits,
+}
+
+impl Default for WeatherConfig {
+    fn default() -> Self {
+        WeatherConfig {
+            location: None,
+            units: WeatherUnits::Metric,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum WeatherUnits {
+    #[default]
+    Metric,
+    Imperial,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct QuoteConfig {
+    #[serde(default)]
+    pub quotes: Vec<String>,
+}
+
+impl Default for QuoteConfig {
+    fn default() -> Self {
+        QuoteConfig {
+            quotes: vec![
+                "The only way to do great work is to love what you do. - Steve Jobs".to_string(),
+                "Innovation distinguishes between a leader and a follower. - Steve Jobs".to_string(),
+                "Stay hungry, stay foolish. - Steve Jobs".to_string(),
+                "Code is like humor. When you have to explain it, it's bad. - Cory House".to_string(),
+                "First, solve the problem. Then, write the code. - John Johnson".to_string(),
+            ],
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct UptimeConfig {
+    // Display system uptime
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DiskUsageConfig {
+    #[serde(default)]
+    pub path: String,
+}
+
+impl Default for DiskUsageConfig {
+    fn default() -> Self {
+        DiskUsageConfig {
+            path: "/".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct MemoryConfig {
+    // Display memory usage
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -285,6 +383,12 @@ impl Config {
                     "break" => Some(ModuleType::Break),
                     "selected" => Some(ModuleType::Selected),
                     "quit" => Some(ModuleType::Quit),
+                    "system_info" | "systeminfo" => Some(ModuleType::SystemInfo),
+                    "weather" => Some(ModuleType::Weather),
+                    "quote" => Some(ModuleType::Quote),
+                    "uptime" => Some(ModuleType::Uptime),
+                    "disk_usage" | "diskusage" | "disk" => Some(ModuleType::DiskUsage),
+                    "memory" | "mem" => Some(ModuleType::Memory),
                     _ => None,
                 }
             };

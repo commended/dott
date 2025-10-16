@@ -307,3 +307,90 @@ args = []
     assert_eq!(config["structure"]["font"].as_str().unwrap(), "JetBrains Mono");
 }
 
+#[test]
+fn test_creative_modules() {
+    // Test all new creative modules
+    let config_content = r#"
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "system_info"
+
+[[structure.build]]
+module = "uptime"
+
+[[structure.build]]
+module = "memory"
+
+[[structure.build]]
+module = "disk"
+
+[[structure.build]]
+module = "quote"
+
+[[structure.build]]
+module = "weather"
+
+[[structure.build]]
+module = "entries"
+
+logo_type = "default"
+
+[[entries]]
+name = "Test"
+command = "cmd"
+args = []
+
+[custom]
+
+[custom.system_info]
+
+[custom.uptime]
+
+[custom.memory]
+
+[custom.disk_usage]
+path = "/"
+
+[custom.weather]
+location = "New York"
+units = "metric"
+
+[custom.quote]
+quotes = ["Test quote"]
+"#;
+    
+    let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
+    
+    // Verify all modules are in structure
+    let build = config["structure"]["build"].as_array().unwrap();
+    assert_eq!(build[0]["module"].as_str().unwrap(), "system_info");
+    assert_eq!(build[1]["module"].as_str().unwrap(), "uptime");
+    assert_eq!(build[2]["module"].as_str().unwrap(), "memory");
+    assert_eq!(build[3]["module"].as_str().unwrap(), "disk");
+    assert_eq!(build[4]["module"].as_str().unwrap(), "quote");
+    assert_eq!(build[5]["module"].as_str().unwrap(), "weather");
+    
+    // Verify custom modules section
+    let custom = &config["custom"];
+    assert!(custom.get("system_info").is_some());
+    assert!(custom.get("uptime").is_some());
+    assert!(custom.get("memory").is_some());
+    assert!(custom.get("disk_usage").is_some());
+    assert!(custom.get("weather").is_some());
+    assert!(custom.get("quote").is_some());
+    
+    // Verify disk_usage config
+    assert_eq!(custom["disk_usage"]["path"].as_str().unwrap(), "/");
+    
+    // Verify weather config
+    assert_eq!(custom["weather"]["location"].as_str().unwrap(), "New York");
+    assert_eq!(custom["weather"]["units"].as_str().unwrap(), "metric");
+    
+    // Verify quote config
+    let quotes = custom["quote"]["quotes"].as_array().unwrap();
+    assert_eq!(quotes.len(), 1);
+    assert_eq!(quotes[0].as_str().unwrap(), "Test quote");
+}
+
