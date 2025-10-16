@@ -37,6 +37,7 @@ The TUI features:
 - **Highlighted selection**: Selected menu items are highlighted with a cyan background
 - **Keyboard navigation**: Use arrow keys or vim-style `j`/`k` to navigate
 - **Quick actions**: Press Enter to execute the selected menu item
+- **Update & Reload**: Press `u` to update dott and reload the config
 
 
 ## Requirements

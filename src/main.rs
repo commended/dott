@@ -231,7 +231,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                         // Update dott
                         println!("Updating dott...");
                         let status = std::process::Command::new("cargo")
-                            .args(&["install", "--git", "https://github.com/commended/dott", "--force"])
+                            .args(["install", "--git", "https://github.com/commended/dott", "--force"])
                             .status();
 
                         match status {
