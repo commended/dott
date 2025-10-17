@@ -23,29 +23,29 @@ Custom modules are configured in the `[custom]` section of your config file. The
 **Configuration Options**:
 ```toml
 # Method 1: Top-level configuration (backward compatible)
+# NOTE: logo_type and path fields must come BEFORE any [[...]] array sections
+logo_type = "default"  # or "custom" or "image"
+custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
+image_logo_path = "/path/to/image.png"  # For image type
+
 [structure]
 position = "center"
 
 [[structure.build]]
-module = "logo"  # Uses the logo_type setting below
-
-# Logo configuration
-logo_type = "default"  # or "custom" or "image"
-custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
-image_logo_path = "/path/to/image.png"  # For image type
+module = "logo"  # Uses the logo_type setting above
 ```
 
 ```toml
 # Method 2: Specify logo type directly in structure.build (recommended)
+# NOTE: Path fields must come BEFORE any [[...]] array sections
+custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
+image_logo_path = "/path/to/image.png"  # For image type
+
 [structure]
 position = "center"
 
 [[structure.build]]
 module = "logo:default"  # or "logo:custom" or "logo:image"
-
-# Still need to specify paths for custom/image types
-custom_logo_path = "/path/to/ascii/art.txt"  # For custom type
-image_logo_path = "/path/to/image.png"  # For image type
 ```
 
 ### 2. Entries
@@ -401,6 +401,10 @@ args = []
 
 ### Minimal Configuration
 ```toml
+# Logo configuration
+# NOTE: logo_type must come BEFORE any [[...]] array sections
+logo_type = "default"
+
 [structure]
 position = "center"
 
@@ -412,9 +416,6 @@ module = "entries"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 [[entries]]
 name = "Quit"
@@ -502,6 +503,10 @@ lines = 2  # Each break adds 2 empty lines
 
 ### Full Configuration
 ```toml
+# Logo configuration
+# NOTE: logo_type must come BEFORE any [[...]] array sections
+logo_type = "default"
+
 [structure]
 position = "center"
 font = "JetBrains Mono"  # Optional: specify a custom font
@@ -523,9 +528,6 @@ module = "clock"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 [[entries]]
 name = "View Dotfiles"
@@ -553,6 +555,10 @@ lines = 2
 
 ### Reordered Configuration
 ```toml
+# Logo configuration
+# NOTE: logo_type must come BEFORE any [[...]] array sections
+logo_type = "default"
+
 [structure]
 position = "center"
 
@@ -574,15 +580,16 @@ module = "colors"
 [[structure.build]]
 module = "help"
 
-# Logo configuration
-logo_type = "default"
-
 # ... rest of config
 ```
 
 ### Creative Modules Configuration
 ```toml
 # Showcase all creative system monitoring modules
+# Logo configuration
+# NOTE: logo_type must come BEFORE any [[...]] array sections
+logo_type = "default"
+
 [structure]
 position = "center"
 
@@ -624,9 +631,6 @@ module = "colors"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 # Entries
 [[entries]]
