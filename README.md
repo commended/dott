@@ -30,7 +30,7 @@ cargo install --git https://github.com/commended/dott --force
 Simply run:
 
 ```bash
-dott
+~/.cargo/bin/dott
 ```
 
 The TUI features:
@@ -53,36 +53,66 @@ The config file is located at `~/.config/dott/config.toml`. You can customize:
 - **Creative Modules**: System info, uptime, memory usage, disk usage, and quotes (must be declared to use)
 - **Break Lines**: Configure how many empty lines each break adds (default: 2)
 
-Example structure with multiple entry groups:
+Default configuration:
 ```toml
+logo_type = "default"
+
 [structure]
 position = "center"
 
 [[structure.build]]
-module = "logo:default"   # Logo type can be specified here
+module = "logo"
 
 [[structure.build]]
-module = "clock"
-
-[[structure.build]]
-module = "entries"        # First group of commands
-
-[[structure.build]]
-module = "break"          # Adds empty lines (default: 2, configurable)
-
-[[structure.build]]
-module = "entries2"       # Second group of commands
+module = "entries"
 
 [[structure.build]]
 module = "colors"
 
 [[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "selected"
+
+[[structure.build]]
 module = "help"
 
-# Logo configuration
-logo_type = "default"
+[[entries]]
+name = "View Dotfiles"
+command = "yazi"
+args = ["~/.config"]
 
-# Custom modules must be declared
+[[entries]]
+name = "Edit Neovim Config"
+command = "nvim"
+args = ["~/.config/nvim/init.lua"]
+
+[[entries]]
+name = "Edit Shell Config"
+command = "nvim"
+args = ["~/.bashrc"]
+
+[[entries]]
+name = "System Monitor"
+command = "btop"
+args = []
+
+[[entries]]
+name = "Git Status"
+command = "lazygit"
+args = []
+
+[[entries]]
+name = "Configure Dott"
+command = "nvim"
+args = ["~/.config/dott/config.toml"]
+
+[[entries]]
+name = "Quit"
+command = ""
+args = []
+
 [custom]
 
 [custom.terminal_colors]
@@ -90,11 +120,11 @@ shape = "circles"
 
 [custom.clock]
 
-[custom.break]
-lines = 2            # Configure break to add 2 empty lines (default)
-```
+[custom.selected]
 
-See [CUSTOM_MODULES.md](CUSTOM_MODULES.md) for detailed configuration options.
+[custom.break]
+lines = 2
+```
 
 ## Requirements
 
