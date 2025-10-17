@@ -2,10 +2,15 @@
 name = "dott-tui"
 version = "0.1.0"
 edition = "2021"
+authors = ["August Ottenweller <OttenwellerAugust@gmail.com>"]
 description = "clean tui with extreme customization"
-liscence = "MIT"
+license = "MIT"
 repository = "https://github.com/commended/dott"
-catagories = "command-line-utilities"
+homepage = "https://github.com/commended/dott"
+documentation = "https://github.com/commended/dott"
+readme = "README.md"
+keywords = ["tui", "terminal", "customization", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 ratatui = "0.28"
