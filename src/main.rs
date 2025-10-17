@@ -159,19 +159,20 @@ impl App {
 fn main() -> Result<(), io::Error> {
     let app = App::new();
     
-    if let config::LogoType::Image = app.config.logo_type
-        && let Some(ref image_path) = app.config.image_logo_path {
-        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-        let expanded_path = image_path.replace("~", &home);
-        
-        println!("\n");
-        if let Err(e) = display_kitty_image(&expanded_path) {
-            eprintln!("Warning: Failed to display image logo: {}", e);
-            eprintln!("Note: This feature requires a terminal with Kitty graphics protocol support");
+    if let config::LogoType::Image = app.config.logo_type {
+        if let Some(ref image_path) = app.config.image_logo_path {
+            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+            let expanded_path = image_path.replace("~", &home);
+            
+            println!("\n");
+            if let Err(e) = display_kitty_image(&expanded_path) {
+                eprintln!("Warning: Failed to display image logo: {}", e);
+                eprintln!("Note: This feature requires a terminal with Kitty graphics protocol support");
+            }
+            println!("\n");
+            
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
-        println!("\n");
-        
-        std::thread::sleep(std::time::Duration::from_millis(100));
     }
     
     enable_raw_mode()?;
@@ -205,8 +206,8 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        if event::poll(std::time::Duration::from_millis(100))?
-            && let Event::Key(key) = event::read()? {
+        if event::poll(std::time::Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
@@ -315,6 +316,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                 }
                 _ => {}
             }
+            }
         }
     }
 }
@@ -376,8 +378,8 @@ fn ui(f: &mut Frame, app: &App) {
                 )));
             }
             config::ModuleType::Selected => {
-                if let Some(ref _custom) = app.config.custom
-                    && let Some(selected_entry) = app.get_selected_item() {
+                if let Some(ref _custom) = app.config.custom {
+                    if let Some(selected_entry) = app.get_selected_item() {
                         let command_text = if selected_entry.command.is_empty() {
                             match selected_entry.name.as_str() {
                                 "Quit" => "Exit application".to_string(),
@@ -397,6 +399,7 @@ fn ui(f: &mut Frame, app: &App) {
                             format!("Selected: {}", command_text),
                             Style::default().fg(Color::Yellow)
                         )));
+                    }
                 }
             }
             config::ModuleType::Break => {
