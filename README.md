@@ -13,7 +13,7 @@ a beautiful and fast tui written in rust
 ## Installation
 
 ```bash
-cargo install --git https://github.com/commended/dott
+cargo install dott-tui
 ```
 
 ### From Source
@@ -26,7 +26,7 @@ sudo cp target/release/dott /usr/local/bin/
 ## Updating
 
 ```bash
-cargo install --git https://github.com/commended/dott --force
+cargo install dott-tui --force
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ cargo install --git https://github.com/commended/dott --force
 Simply run:
 
 ```bash
-~/.cargo/bin/dott
+~/.cargo/bin/dott-tui
 ```
 
 The TUI features:
