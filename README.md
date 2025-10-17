@@ -5,10 +5,8 @@
 
 a beautiful and fast tui written in rust
 
-## Screenshots
+## Showcase
 ![alt text](https://github.com/commended/dott/blob/main/showcase/dottshowcase1.png)
-![alt text](https://github.com/commended/dott/blob/main/showcase/dottshowcase2.png)
-
 
 
 ## Installation
