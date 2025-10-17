@@ -497,15 +497,29 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> String {
+    eprintln!("DEBUG: get_logo_text_with_type called with logo_type: {:?}", logo_type);
     match logo_type {
         config::LogoType::Default => DOTT_LOGO.to_string(),
         config::LogoType::Custom => {
+            eprintln!("DEBUG: LogoType::Custom branch");
             if let Some(ref path) = config.custom_logo_path {
+                eprintln!("DEBUG: custom_logo_path = {:?}", path);
                 // Expand ~ to home directory
                 let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
                 let expanded_path = path.replace("~", &home);
-                std::fs::read_to_string(&expanded_path).unwrap_or_else(|_| DOTT_LOGO.to_string())
+                eprintln!("DEBUG: expanded_path = {:?}", expanded_path);
+                match std::fs::read_to_string(&expanded_path) {
+                    Ok(content) => {
+                        eprintln!("DEBUG: Successfully read custom logo, length = {}", content.len());
+                        content
+                    }
+                    Err(e) => {
+                        eprintln!("DEBUG: Failed to read custom logo: {}", e);
+                        DOTT_LOGO.to_string()
+                    }
+                }
             } else {
+                eprintln!("DEBUG: No custom_logo_path set");
                 DOTT_LOGO.to_string()
             }
         }
