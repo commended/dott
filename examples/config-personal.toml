@@ -1,0 +1,97 @@
+logo_type = "custom"
+custom_logo_path = "~/.config/dott/my-logo.txt"
+
+[structure]
+position = "center"
+
+[[structure.build]]
+module = "logo"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "clock"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries2"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "entries3"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "selected"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "colors"
+
+[[structure.build]]
+module = "break"
+
+[[structure.build]]
+module = "help"
+
+[[entries]]
+name = "Neovim"
+command = "nvim"
+args = []
+
+[[entries]]
+name = "Edit Dott"
+command = "nvim"
+args = ["~/.config/dott/config.toml"]
+
+[[entries]]
+name = "Edit shell"
+command = "nvim"
+args = ["~/.zshrc"]
+
+[[entries2]]
+name = "Browse Dotfiles"
+command = "yazi"
+args = ["~/.config"]
+
+[[entries2]]
+name = "Browse Home"
+command = "yazi"
+args = ["~"]
+
+[[entries3]]
+name = "System Monitor"
+command = "btop"
+args = []
+
+[[entries3]]
+name = "Quit"
+command = ""
+args = []
+
+[custom]
+
+[custom.terminal_colors]
+shape = "circles"
+
+[custom.clock]
+
+[custom.selected]
+
+[custom.break]
+lines = 2
