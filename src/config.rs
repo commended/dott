@@ -43,7 +43,7 @@ pub struct OrderedModule {
 #[derive(Debug, Clone)]
 pub enum ModuleType {
     Logo(LogoType),
-    Entries(String), // String indicates which entries array (e.g., "entries", "entries2")
+    Entries(String),
     Colors,
     Clock,
     Help,
@@ -215,10 +215,7 @@ fn default_color_shape() -> ColorShape {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct ClockConfig {
-    // Position is now determined by structure.build order
-    // No position field needed
-}
+pub struct ClockConfig {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BreakConfig {
@@ -231,15 +228,10 @@ fn default_break_lines() -> usize {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct SelectedConfig {
-    // No configurable settings for now
-    // This module will display the command for the currently selected entry
-}
+pub struct SelectedConfig {}
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct SystemInfoConfig {
-    // Display system information: hostname, OS, kernel
-}
+pub struct SystemInfoConfig {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuoteConfig {
@@ -262,9 +254,7 @@ impl Default for QuoteConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct UptimeConfig {
-    // Display system uptime
-}
+pub struct UptimeConfig {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiskUsageConfig {
@@ -281,9 +271,7 @@ impl Default for DiskUsageConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct MemoryConfig {
-    // Display memory usage
-}
+pub struct MemoryConfig {}
 
 impl Default for Config {
     fn default() -> Self {
@@ -303,7 +291,6 @@ impl Default for Config {
 }
 
 impl Config {
-    /// Get all entries for a specific entries group name (e.g., "entries", "entries2")
     pub fn get_entries(&self, name: &str) -> &[MenuItem] {
         match name {
             "entries" => &self.entries,
@@ -315,26 +302,22 @@ impl Config {
         }
     }
 
-    /// Get all modules ordered according to structure.build
     pub fn get_ordered_modules(&self) -> Vec<OrderedModule> {
         let mut modules = Vec::new();
         
         for build_item in self.structure.build.iter() {
             let module_name = &build_item.module;
             let module_type = if module_name.starts_with("logo") {
-                // Parse logo type from "logo", "logo:default", "logo:custom", or "logo:image"
                 let logo_type = if module_name == "logo" {
-                    // Use the top-level logo_type if just "logo" is specified
                     self.logo_type.clone()
                 } else {
-                    // Parse the type from "logo:TYPE"
                     let parts: Vec<&str> = module_name.split(':').collect();
                     if parts.len() == 2 {
                         match parts[1] {
                             "default" => LogoType::Default,
                             "custom" => LogoType::Custom,
                             "image" => LogoType::Image,
-                            _ => self.logo_type.clone(), // Fallback to top-level
+                            _ => self.logo_type.clone(),
                         }
                     } else {
                         self.logo_type.clone()
@@ -373,12 +356,11 @@ impl Config {
         modules
     }
 
-    /// Get the number of lines for a break module
     pub fn get_break_lines(&self) -> usize {
         if let Some(ref custom) = self.custom {
             return custom.break_.lines;
         }
-        2 // Default to 2 lines
+        2
     }
 }
 

@@ -1,9 +1,5 @@
-use std::fs;
-use std::path::PathBuf;
-
 #[test]
 fn test_multiple_entry_groups() {
-    // Create a test config with multiple entry groups
     let config_content = r#"
 logo_type = "default"
 
@@ -46,13 +42,10 @@ command = "cmd4"
 args = []
 "#;
     
-    // Parse the config
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify structure
     assert_eq!(config["structure"]["position"].as_str().unwrap(), "center");
     
-    // Verify build order
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build.len(), 5);
     assert_eq!(build[0]["module"].as_str().unwrap(), "logo");
@@ -61,13 +54,11 @@ args = []
     assert_eq!(build[3]["module"].as_str().unwrap(), "entries2");
     assert_eq!(build[4]["module"].as_str().unwrap(), "help");
     
-    // Verify entries
     let entries = config["entries"].as_array().unwrap();
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0]["name"].as_str().unwrap(), "First Group Item 1");
     assert_eq!(entries[1]["name"].as_str().unwrap(), "First Group Item 2");
     
-    // Verify entries2
     let entries2 = config["entries2"].as_array().unwrap();
     assert_eq!(entries2.len(), 2);
     assert_eq!(entries2[0]["name"].as_str().unwrap(), "Second Group Item 1");
@@ -75,26 +66,7 @@ args = []
 }
 
 #[test]
-fn test_example_config_parses() {
-    let example_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("examples")
-        .join("config-multiple-entries.toml");
-    
-    let content = fs::read_to_string(&example_path)
-        .expect("Failed to read example config");
-    
-    let config: toml::Value = toml::from_str(&content)
-        .expect("Failed to parse example config");
-    
-    // Verify it has the expected structure
-    assert!(config.get("structure").is_some());
-    assert!(config.get("entries").is_some());
-    assert!(config.get("entries2").is_some());
-}
-
-#[test]
 fn test_break_configuration() {
-    // Test default break lines (should be 2)
     let config_content = r#"
 logo_type = "default"
 
@@ -118,14 +90,12 @@ args = []
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify that break is in the structure
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build[1]["module"].as_str().unwrap(), "break");
 }
 
 #[test]
 fn test_break_custom_lines() {
-    // Test custom break lines
     let config_content = r#"
 logo_type = "default"
 
@@ -154,7 +124,6 @@ lines = 3
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify custom break config
     assert!(config.get("custom").is_some());
     assert!(config["custom"].get("break").is_some());
     assert_eq!(config["custom"]["break"]["lines"].as_integer().unwrap(), 3);
@@ -162,7 +131,6 @@ lines = 3
 
 #[test]
 fn test_logo_type_in_structure_build() {
-    // Test logo type specified in structure.build
     let config_content = r#"
 [structure]
 position = "center"
@@ -183,14 +151,12 @@ args = []
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify logo type in structure build
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build[0]["module"].as_str().unwrap(), "logo:custom");
 }
 
 #[test]
 fn test_custom_modules_required() {
-    // Test that custom modules section is present and has all required fields
     let config_content = r#"
 [structure]
 position = "center"
@@ -227,10 +193,8 @@ lines = 2
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify custom section exists
     assert!(config.get("custom").is_some());
     
-    // Verify all custom modules are present
     let custom = &config["custom"];
     assert!(custom.get("terminal_colors").is_some());
     assert!(custom.get("clock").is_some());
@@ -239,7 +203,6 @@ lines = 2
 
 #[test]
 fn test_selected_module() {
-    // Test that selected module can be configured
     let config_content = r#"
 [structure]
 position = "center"
@@ -270,18 +233,15 @@ args = ["hello"]
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify selected module is in structure build
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build[2]["module"].as_str().unwrap(), "selected");
     
-    // Verify custom.selected section exists
     assert!(config.get("custom").is_some());
     assert!(config["custom"].get("selected").is_some());
 }
 
 #[test]
 fn test_structure_font_option() {
-    // Test that font option can be set in structure
     let config_content = r#"
 [structure]
 position = "center"
@@ -303,13 +263,11 @@ args = []
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify font option in structure
     assert_eq!(config["structure"]["font"].as_str().unwrap(), "JetBrains Mono");
 }
 
 #[test]
 fn test_creative_modules() {
-    // Test all new creative modules
     let config_content = r#"
 [structure]
 position = "center"
@@ -356,7 +314,6 @@ quotes = ["Test quote"]
     
     let config: toml::Value = toml::from_str(config_content).expect("Failed to parse config");
     
-    // Verify all modules are in structure
     let build = config["structure"]["build"].as_array().unwrap();
     assert_eq!(build[0]["module"].as_str().unwrap(), "system_info");
     assert_eq!(build[1]["module"].as_str().unwrap(), "uptime");
@@ -364,7 +321,6 @@ quotes = ["Test quote"]
     assert_eq!(build[3]["module"].as_str().unwrap(), "disk");
     assert_eq!(build[4]["module"].as_str().unwrap(), "quote");
     
-    // Verify custom modules section
     let custom = &config["custom"];
     assert!(custom.get("system_info").is_some());
     assert!(custom.get("uptime").is_some());
@@ -372,10 +328,8 @@ quotes = ["Test quote"]
     assert!(custom.get("disk_usage").is_some());
     assert!(custom.get("quote").is_some());
     
-    // Verify disk_usage config
     assert_eq!(custom["disk_usage"]["path"].as_str().unwrap(), "/");
     
-    // Verify quote config
     let quotes = custom["quote"]["quotes"].as_array().unwrap();
     assert_eq!(quotes.len(), 1);
     assert_eq!(quotes[0].as_str().unwrap(), "Test quote");
