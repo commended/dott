@@ -36,23 +36,14 @@ const DOTT_LOGO: &str = r#"
                       
 "#;
 
-/// Display an image using Kitty's image protocol
-/// This is an experimental feature that requires a terminal supporting Kitty's graphics protocol
 fn display_kitty_image(path: &str) -> Result<(), String> {
     use std::fs;
     
-    // Read the image file
     let image_data = fs::read(path).map_err(|e| format!("Failed to read image: {}", e))?;
     
-    // Encode as base64
     let encoded = base64_encode(&image_data);
     
-    // Kitty graphics protocol escape sequence
-    // Format: \x1b_Gf=100,a=T,t=f;<base64_data>\x1b\\
-    // where:
-    // - f=100: format is PNG/auto-detect
-    // - a=T: transmission medium is direct
-    // - t=f: transmission is from file data
+
     let escape_seq = format!("\x1b_Gf=100,a=T,t=f;{}\x1b\\", encoded);
     
     print!("{}", escape_seq);
@@ -61,7 +52,6 @@ fn display_kitty_image(path: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Simple base64 encoding
 fn base64_encode(data: &[u8]) -> String {
     const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut result = String::new();
@@ -98,12 +88,9 @@ fn base64_encode(data: &[u8]) -> String {
 
 
 
-/// Detect the user's shell and return the config file path (with ~ for display)
 fn detect_shell_config() -> Option<String> {
-    // Check the SHELL environment variable
     let shell = std::env::var("SHELL").ok()?;
     
-    // Determine config file based on shell (using ~ notation)
     let config_file = if shell.contains("zsh") {
         "~/.zshrc"
     } else if shell.contains("bash") {
@@ -115,7 +102,6 @@ fn detect_shell_config() -> Option<String> {
     } else if shell.contains("tcsh") {
         "~/.tcshrc"
     } else {
-        // Default to bashrc if we can't determine
         "~/.bashrc"
     };
     
@@ -125,7 +111,6 @@ fn detect_shell_config() -> Option<String> {
 struct App {
     selected: usize,
     config: Config,
-    // Flattened list of all entries with their group names
     all_entries: Vec<(String, config::MenuItem)>,
 }
 
@@ -133,7 +118,6 @@ impl App {
     fn new() -> App {
         let config = Config::load();
         
-        // Build a flattened list of all entries in the order they appear in structure.build
         let mut all_entries = Vec::new();
         for module in config.get_ordered_modules() {
             if let config::ModuleType::Entries(group_name) = module.module_type {
@@ -173,13 +157,10 @@ impl App {
 }
 
 fn main() -> Result<(), io::Error> {
-    // Create app state early to check for image logo
     let app = App::new();
     
-    // If using image logo, display it before entering TUI (experimental feature)
     if let config::LogoType::Image = app.config.logo_type {
         if let Some(ref image_path) = app.config.image_logo_path {
-            // Expand ~ to home directory
             let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
             let expanded_path = image_path.replace("~", &home);
             
@@ -190,23 +171,19 @@ fn main() -> Result<(), io::Error> {
             }
             println!("\n");
             
-            // Small delay to let image render
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
     }
     
-    // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // Run the app
     let mut app = app;
     let res = run_app(&mut terminal, &mut app);
 
-    // Restore terminal
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -229,7 +206,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        // Poll for events with a timeout to update the clock
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
@@ -237,11 +213,9 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
                     KeyCode::Char('u') => {
-                        // Reload config silently (only show errors)
                         app.config = Config::load();
                         app.selected = 0;
                         
-                        // Rebuild all_entries list
                         app.all_entries.clear();
                         for module in app.config.get_ordered_modules() {
                             if let config::ModuleType::Entries(group_name) = module.module_type {
@@ -252,7 +226,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                             }
                         }
                         
-                        // Redraw immediately
                         terminal.clear()?;
                     }
                     KeyCode::Enter => {
@@ -261,9 +234,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     match selected.name.as_str() {
                         "Quit" => return Ok(()),
                         "View Shell" => {
-                            // Detect shell config and open in nvim
                             if let Some(shell_config) = detect_shell_config() {
-                                // Exit TUI temporarily
                                 disable_raw_mode()?;
                                 execute!(
                                     terminal.backend_mut(),
@@ -272,16 +243,13 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                 )?;
                                 terminal.show_cursor()?;
 
-                                // Expand ~ to home directory
                                 let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
                                 let expanded_path = shell_config.replace("~", &home);
 
-                                // Open shell config in nvim
                                 let _ = std::process::Command::new("nvim")
                                     .arg(&expanded_path)
                                     .status();
 
-                                // Restore TUI
                                 enable_raw_mode()?;
                                 execute!(
                                     terminal.backend_mut(),
@@ -292,7 +260,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                             }
                         }
                         "Edit Dott Config" => {
-                            // Exit TUI temporarily
                             disable_raw_mode()?;
                             execute!(
                                 terminal.backend_mut(),
@@ -301,14 +268,12 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                             )?;
                             terminal.show_cursor()?;
 
-                            // Open dott config in nvim
                             let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
                             let config_path = format!("{}/.config/dott/config.toml", home);
                             let _ = std::process::Command::new("nvim")
                                 .arg(&config_path)
                                 .status();
 
-                            // Restore TUI
                             enable_raw_mode()?;
                             execute!(
                                 terminal.backend_mut(),
@@ -328,8 +293,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                 )?;
                                 terminal.show_cursor()?;
 
-                                // Execute command with args
-                                // Expand ~ in arguments
                                 let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
                                 let expanded_args: Vec<String> = selected.args.iter()
                                     .map(|arg| arg.replace("~", &home))
@@ -340,7 +303,6 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                                     .args(&args)
                                     .status();
 
-                                // Restore TUI
                                 enable_raw_mode()?;
                                 execute!(
                                     terminal.backend_mut(),
@@ -363,10 +325,8 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
 fn ui(f: &mut Frame, app: &App) {
     let size = f.area();
     
-    // Get ordered modules from config
     let ordered_modules = app.config.get_ordered_modules();
     
-    // Build the layout dynamically based on modules
     let mut lines = Vec::new();
     let mut current_entry_index = 0;
     
@@ -422,7 +382,6 @@ fn ui(f: &mut Frame, app: &App) {
                 if let Some(ref _custom) = app.config.custom {
                     if let Some(selected_entry) = app.get_selected_item() {
                         let command_text = if selected_entry.command.is_empty() {
-                            // Handle special entries that don't have commands
                             match selected_entry.name.as_str() {
                                 "Quit" => "Exit application".to_string(),
                                 "Edit Dott Config" => "Edit dott config in nvim".to_string(),
@@ -451,8 +410,6 @@ fn ui(f: &mut Frame, app: &App) {
                 }
             }
             config::ModuleType::Quit => {
-                // Quit is a special entry that should be handled like other entries
-                // This is for when "quit" is used as a standalone module
             }
             config::ModuleType::SystemInfo => {
                 if let Some(ref _custom) = app.config.custom {
@@ -488,7 +445,6 @@ fn ui(f: &mut Frame, app: &App) {
         }
     }
     
-    // Render everything centered
     let paragraph = Paragraph::new(lines)
         .alignment(Alignment::Center)
         .style(Style::default().fg(Color::White));
@@ -501,7 +457,6 @@ fn get_logo_text_with_type(logo_type: &config::LogoType, config: &Config) -> Str
         config::LogoType::Default => DOTT_LOGO.to_string(),
         config::LogoType::Custom => {
             if let Some(ref path) = config.custom_logo_path {
-                // Expand ~ to home directory
                 let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
                 let expanded_path = path.replace("~", &home);
                 std::fs::read_to_string(&expanded_path).unwrap_or_else(|_| DOTT_LOGO.to_string())
@@ -542,14 +497,12 @@ fn render_terminal_colors_lines(colors_config: &config::TerminalColorsConfig) ->
             lines.push(Line::from(spans));
         }
         config::ColorShape::Squares => {
-            // First row
             let mut spans_row1 = vec![];
             for color in colors.iter().take(4) {
                 spans_row1.push(Span::styled("■ ", Style::default().fg(*color)));
             }
             lines.push(Line::from(spans_row1));
             
-            // Second row
             let mut spans_row2 = vec![];
             for color in colors.iter().skip(4).take(4) {
                 spans_row2.push(Span::styled("■ ", Style::default().fg(*color)));
@@ -564,20 +517,16 @@ fn render_terminal_colors_lines(colors_config: &config::TerminalColorsConfig) ->
 fn render_system_info() -> Vec<Line<'static>> {
     let mut lines = Vec::new();
     
-    // Get hostname
     let hostname = std::env::var("HOSTNAME")
         .or_else(|_| std::env::var("HOST"))
         .unwrap_or_else(|_| {
-            // Try to read from /etc/hostname
             std::fs::read_to_string("/etc/hostname")
                 .map(|s| s.trim().to_string())
                 .unwrap_or_else(|_| "unknown".to_string())
         });
     
-    // Get OS info
     let os = std::env::consts::OS;
     
-    // Get kernel version (Linux only)
     let kernel = if cfg!(target_os = "linux") {
         std::fs::read_to_string("/proc/version")
             .ok()
@@ -601,7 +550,6 @@ fn render_quote(config: &config::QuoteConfig) -> Vec<Line<'static>> {
     if !config.quotes.is_empty() {
         let mut rng = rand::thread_rng();
         if let Some(quote) = config.quotes.choose(&mut rng) {
-            // Split long quotes into multiple lines
             let max_width = 80;
             let words: Vec<&str> = quote.split_whitespace().collect();
             let mut current_line = String::new();
@@ -679,7 +627,6 @@ fn render_disk_usage(config: &config::DiskUsageConfig) -> Vec<Line<'static>> {
     
     let disks = Disks::new_with_refreshed_list();
     
-    // Find the disk matching the configured path
     for disk in &disks {
         if disk.mount_point().to_str() == Some(&config.path) {
             let total = disk.total_space();
