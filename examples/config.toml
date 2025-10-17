@@ -1,3 +1,7 @@
+# Logo configuration
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "default"
+
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
@@ -20,9 +24,6 @@ module = "selected"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 # Entries - terminal commands with name, command, and arguments
 [[entries]]

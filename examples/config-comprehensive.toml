@@ -1,6 +1,11 @@
 # Comprehensive Dott Configuration Example
 # Demonstrates all features including multiple entry clusters
 
+# Logo type can be set here for backward compatibility
+# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "default"
+
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
@@ -50,10 +55,6 @@ module = "break"
 
 [[structure.build]]
 module = "help"
-
-# Logo type can be set here for backward compatibility
-# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
-logo_type = "default"
 
 # Development tools
 [[entries]]
