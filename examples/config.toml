@@ -1,11 +1,7 @@
-# Logo configuration
-# NOTE: These fields must be defined before any [[...]] array sections
 logo_type = "default"
 
-# Structure defines the layout and order of modules
 [structure]
 position = "center"
-# font = "JetBrains Mono"  # Optional: specify a custom font (default is terminal font)
 
 [[structure.build]]
 module = "logo"
@@ -25,11 +21,10 @@ module = "selected"
 [[structure.build]]
 module = "help"
 
-# Entries - terminal commands with name, command, and arguments
 [[entries]]
 name = "View Dotfiles"
 command = "yazi"
-args = []
+args = ["~/.config"]
 
 [[entries]]
 name = "Edit Neovim Config"
@@ -43,7 +38,7 @@ args = ["~/.bashrc"]
 
 [[entries]]
 name = "System Monitor"
-command = "htop"
+command = "btop"
 args = []
 
 [[entries]]
@@ -61,19 +56,14 @@ name = "Quit"
 command = ""
 args = []
 
-# Custom modules configuration
 [custom]
 
-# Terminal colors module - displays color palette
 [custom.terminal_colors]
 shape = "circles"
 
-# Clock module - displays current time
 [custom.clock]
 
-# Selected module - displays the command for the currently selected entry
 [custom.selected]
 
-# Break module - adds empty lines (default: 2)
 [custom.break]
 lines = 2
