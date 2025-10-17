@@ -1,15 +1,8 @@
-# Comprehensive Dott Configuration Example
-# Demonstrates all features including multiple entry clusters
+logo_type = "custom"
+custom_logo_path = "~/.config/dott/my-logo.txt"
 
-# Logo type can be set here for backward compatibility
-# But can also be specified in structure.build as "logo:default", "logo:custom", or "logo:image"
-# NOTE: These fields must be defined before any [[...]] array sections
-logo_type = "default"
-
-# Structure defines the layout and order of modules
 [structure]
 position = "center"
-# font = "JetBrains Mono"  # Optional: specify a custom font (default is terminal font)
 
 [[structure.build]]
 module = "logo"
@@ -56,20 +49,18 @@ module = "break"
 [[structure.build]]
 module = "help"
 
-# Development tools
 [[entries]]
-name = "Edit Neovim"
+name = "Neovim"
 command = "nvim"
-args = ["~/.config/nvim/init.lua"]
+args = []
 
 [[entries]]
 name = "Edit Dott"
 command = "nvim"
 args = ["~/.config/dott/config.toml"]
 
-# File management
 [[entries2]]
-name = "Browse Config"
+name = "Browse Dotfiles"
 command = "yazi"
 args = ["~/.config"]
 
@@ -78,15 +69,9 @@ name = "Browse Home"
 command = "yazi"
 args = ["~"]
 
-# System tools
 [[entries3]]
 name = "System Monitor"
-command = "htop"
-args = []
-
-[[entries3]]
-name = "Git Status"
-command = "lazygit"
+command = "btop"
 args = []
 
 [[entries3]]
@@ -94,20 +79,14 @@ name = "Quit"
 command = ""
 args = []
 
-# Custom modules configuration
 [custom]
 
-# Terminal colors module - displays color palette
 [custom.terminal_colors]
 shape = "circles"
 
-# Clock module - displays current time
 [custom.clock]
 
-# Selected module - displays the command for the currently selected entry
 [custom.selected]
 
-# Configure break to skip 2 lines (default)
-# You can change this to any number
 [custom.break]
 lines = 2
