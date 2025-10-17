@@ -1,5 +1,5 @@
 [package]
-name = "dott"
+name = "dott-tui"
 version = "0.1.0"
 edition = "2021"
 description = "clean tui with extreme customization"
