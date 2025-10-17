@@ -1,5 +1,15 @@
 # Example config demonstrating custom logo with .txt file
 
+# Logo configuration
+# The custom logo will be loaded from the specified .txt file
+# Both absolute paths and ~ notation are supported
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "custom"
+custom_logo_path = "~/custom-logo.txt"  # Or use absolute path like "/path/to/logo.txt"
+
+# Note: To use the custom logo, create a .txt file with your ASCII art
+# Example: copy examples/custom-logo.txt to ~/custom-logo.txt
+
 [structure]
 position = "center"
 
@@ -11,15 +21,6 @@ module = "entries"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-# The custom logo will be loaded from the specified .txt file
-# Both absolute paths and ~ notation are supported
-logo_type = "custom"
-custom_logo_path = "~/custom-logo.txt"  # Or use absolute path like "/path/to/logo.txt"
-
-# Note: To use the custom logo, create a .txt file with your ASCII art
-# Example: copy examples/custom-logo.txt to ~/custom-logo.txt
 
 # Entries - terminal commands with name, command, and arguments
 [[entries]]

@@ -1,6 +1,15 @@
 # Dott Configuration Example - Image Logo (Experimental)
 # This example demonstrates using an image as a logo with Kitty's graphics protocol
 
+# Logo type: "default", "custom", or "image" (experimental)
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "image"
+
+# Path to image file (PNG, JPEG, etc.)
+# Requires a terminal with Kitty graphics protocol support
+# Works in: Kitty, WezTerm, and some versions of Konsole
+image_logo_path = "/home/runner/.config/dott/logo.png"
+
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
@@ -19,14 +28,6 @@ module = "clock"
 
 [[structure.build]]
 module = "help"
-
-# Logo type: "default", "custom", or "image" (experimental)
-logo_type = "image"
-
-# Path to image file (PNG, JPEG, etc.)
-# Requires a terminal with Kitty graphics protocol support
-# Works in: Kitty, WezTerm, and some versions of Konsole
-image_logo_path = "/home/runner/.config/dott/logo.png"
 
 # Entries - terminal commands with name, command, and arguments
 [[entries]]

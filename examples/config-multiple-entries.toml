@@ -1,6 +1,10 @@
 # Dott Configuration Example - Multiple Entry Clusters
 # This example demonstrates using multiple entry groups with different modules
 
+# Logo configuration
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "default"
+
 # Structure defines the layout and order of modules
 [structure]
 position = "center"
@@ -25,9 +29,6 @@ module = "colors"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 # First group of entries
 [[entries]]

@@ -1,5 +1,9 @@
 # Example config showcasing all the creative custom modules
 
+# Logo configuration
+# NOTE: These fields must be defined before any [[...]] array sections
+logo_type = "default"
+
 [structure]
 position = "center"
 
@@ -47,9 +51,6 @@ module = "colors"
 
 [[structure.build]]
 module = "help"
-
-# Logo configuration
-logo_type = "default"
 
 # Entries - terminal commands
 [[entries]]

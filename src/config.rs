@@ -386,23 +386,13 @@ impl Config {
     pub fn load() -> Self {
         let config_path = Self::config_path();
         
-        eprintln!("DEBUG: Loading config from {:?}", config_path);
-        
         if config_path.exists() {
             match fs::read_to_string(&config_path) {
-                Ok(content) => {
-                    eprintln!("DEBUG: Config file read successfully");
-                    match toml::from_str::<Config>(&content) {
-                        Ok(config) => {
-                            eprintln!("DEBUG: Config parsed successfully");
-                            eprintln!("DEBUG: logo_type = {:?}", config.logo_type);
-                            eprintln!("DEBUG: custom_logo_path = {:?}", config.custom_logo_path);
-                            config
-                        },
-                        Err(e) => {
-                            eprintln!("Error parsing config: {}. Using defaults.", e);
-                            Config::default()
-                        }
+                Ok(content) => match toml::from_str(&content) {
+                    Ok(config) => config,
+                    Err(e) => {
+                        eprintln!("Error parsing config: {}. Using defaults.", e);
+                        Config::default()
                     }
                 },
                 Err(e) => {
@@ -411,7 +401,6 @@ impl Config {
                 }
             }
         } else {
-            eprintln!("DEBUG: Config file doesn't exist, creating default");
             let config = Config::default();
             let _ = config.save();
             config
