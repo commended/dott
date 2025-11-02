@@ -37,17 +37,26 @@ Simply run:
 ~/.cargo/bin/dott-tui
 ```
 
+To use a custom configuration file:
+
+```bash
+~/.cargo/bin/dott-tui -C /path/to/config.toml
+# or
+~/.cargo/bin/dott-tui --config /path/to/config.toml
+```
+
 The TUI features:
 - **Highlighted selection**: Selected menu items are highlighted with a cyan background
 - **Keyboard navigation**: Use arrow keys or vim-style `j`/`k` to navigate
 - **Quick actions**: Press Enter to execute the selected menu item
 - **Reload Config**: Press `u` to reload the config without restarting the app
+- **Custom Configuration**: Use `-C` flag to specify an alternative config file location
 - **Customizable Layout**: Configure the order and appearance of modules
 - **Multiple Entry Groups**: Organize commands into separate groups
 
 ## Configuration
 
-The config file is located at `~/.config/dott/config.toml`. You can customize:
+The config file is located at `~/.config/dott/config.toml` by default. You can use a different config file by running dott-tui with the `-C` flag. You can customize:
 
 - **Structure**: Define the order of modules (logo, entries, clock, colors, help, break)
 - **Logo**: Choose between default, custom ASCII art, or image (Kitty protocol). Can be set via top-level `logo_type` or directly in `structure.build` (e.g., `"logo:default"`, `"logo:custom"`, `"logo:image"`)
