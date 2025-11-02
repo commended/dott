@@ -19,6 +19,8 @@ use chrono::Local;
 use std::io::Write;
 use rand::seq::SliceRandom;
 use sysinfo::{System, Disks};
+use clap::Parser;
+use std::path::PathBuf;
 
 const DOTT_LOGO: &str = r#"
     ;'*¨'`·- .,  ‘                   , ·. ,.-·~·.,   ‘             ,  . .,  °             ,  . .,  °    
@@ -35,6 +37,15 @@ const DOTT_LOGO: &str = r#"
                                        ‘                               °                      °         
                       
 "#;
+
+#[derive(Parser, Debug)]
+#[command(name = "dott-tui")]
+#[command(about = "A beautiful and fast TUI written in Rust", long_about = None)]
+struct Args {
+    /// Path to configuration file
+    #[arg(short = 'C', long = "config", value_name = "FILE")]
+    config: Option<PathBuf>,
+}
 
 fn display_kitty_image(path: &str) -> Result<(), String> {
     use std::fs;
@@ -112,11 +123,12 @@ struct App {
     selected: usize,
     config: Config,
     all_entries: Vec<(String, config::MenuItem)>,
+    config_path: Option<PathBuf>,
 }
 
 impl App {
-    fn new() -> App {
-        let config = Config::load();
+    fn new(config_path: Option<PathBuf>) -> App {
+        let config = Config::load_from(config_path.clone());
         
         let mut all_entries = Vec::new();
         for module in config.get_ordered_modules() {
@@ -132,6 +144,7 @@ impl App {
             selected: 0,
             config,
             all_entries,
+            config_path,
         }
     }
 
@@ -157,7 +170,20 @@ impl App {
 }
 
 fn main() -> Result<(), io::Error> {
-    let app = App::new();
+    let args = Args::parse();
+    
+    // Expand ~ in config path if provided
+    let config_path = args.config.map(|path| {
+        let path_str = path.to_string_lossy().to_string();
+        if path_str.starts_with("~") {
+            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+            PathBuf::from(path_str.replace("~", &home))
+        } else {
+            path
+        }
+    });
+    
+    let app = App::new(config_path);
     
     if let config::LogoType::Image = app.config.logo_type {
         if let Some(ref image_path) = app.config.image_logo_path {
@@ -213,7 +239,7 @@ fn run_app<B: ratatui::backend::Backend + std::io::Write>(
                     KeyCode::Down | KeyCode::Char('j') => app.next(),
                     KeyCode::Up | KeyCode::Char('k') => app.previous(),
                     KeyCode::Char('u') => {
-                        app.config = Config::load();
+                        app.config = Config::load_from(app.config_path.clone());
                         app.selected = 0;
                         
                         app.all_entries.clear();

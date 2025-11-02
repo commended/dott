@@ -366,7 +366,13 @@ impl Config {
 
 impl Config {
     pub fn load() -> Self {
-        let config_path = Self::config_path();
+        Self::load_from(None)
+    }
+
+    pub fn load_from(custom_path: Option<PathBuf>) -> Self {
+        let config_path = custom_path.as_ref()
+            .map(|p| p.clone())
+            .unwrap_or_else(|| Self::config_path());
         
         if config_path.exists() {
             match fs::read_to_string(&config_path) {
@@ -384,7 +390,10 @@ impl Config {
             }
         } else {
             let config = Config::default();
-            let _ = config.save();
+            // Only save default config to the default location
+            if custom_path.is_none() {
+                let _ = config.save();
+            }
             config
         }
     }
