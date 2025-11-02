@@ -175,9 +175,9 @@ fn main() -> Result<(), io::Error> {
     // Expand ~ in config path if provided
     let config_path = args.config.map(|path| {
         let path_str = path.to_string_lossy().to_string();
-        if path_str.starts_with("~") {
+        if path_str == "~" || path_str.starts_with("~/") {
             let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-            PathBuf::from(path_str.replace("~", &home))
+            PathBuf::from(path_str.replacen("~", &home, 1))
         } else {
             path
         }

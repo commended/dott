@@ -370,8 +370,7 @@ impl Config {
     }
 
     pub fn load_from(custom_path: Option<PathBuf>) -> Self {
-        let config_path = custom_path.as_ref()
-            .map(|p| p.clone())
+        let config_path = custom_path.clone()
             .unwrap_or_else(|| Self::config_path());
         
         if config_path.exists() {
